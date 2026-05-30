@@ -1,0 +1,514 @@
+{% extends "admin_nav.html" %}
+{% block content %}
+{% load static %}
+
+<style>
+:root {
+    --primary: #198754;
+    --danger: #dc3545;
+    --dark: #212529;
+    --light: #f8f9fa;
+    --border: #dee2e6;
+}
+
+.detail-wrap {
+    padding: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Header */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.page-title h2 {
+    margin: 0;
+    color: var(--dark);
+    font-size: 28px;
+}
+
+.page-title p {
+    margin: 5px 0 0 0;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+/* Main Grid */
+.detail-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+}
+
+@media (max-width: 992px) {
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Cards */
+.detail-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    margin-bottom: 25px;
+}
+
+.card-header {
+    padding: 18px 25px;
+    border-bottom: 1px solid var(--border);
+    background: var(--light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.card-body {
+    padding: 25px;
+}
+
+/* Image Gallery */
+.main-image {
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    background: var(--light);
+}
+
+.thumbnail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.thumbnail {
+    width: 100%;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.2s;
+}
+
+.thumbnail:hover, .thumbnail.active {
+    border-color: var(--primary);
+}
+
+/* Info Grid */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+@media (max-width: 576px) {
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.info-item {
+    padding: 15px;
+    background: #f8f9fc;
+    border-radius: 8px;
+    border-left: 3px solid var(--primary);
+}
+
+.info-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+
+.info-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--dark);
+}
+
+/* Owner Box */
+.owner-box {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: #e7f5ff;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.owner-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.owner-info h4 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.owner-info p {
+    margin: 3px 0 0 0;
+    font-size: 13px;
+    color: #6c757d;
+}
+
+/* Status Badge */
+.status-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-available { background: #d1e7dd; color: #0f5132; }
+.status-occupied { background: #fff3cd; color: #856404; }
+.status-maintenance { background: #f8d7da; color: #842029; }
+
+/* Features List */
+.features-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #495057;
+}
+
+.feature-item i {
+    color: var(--primary);
+    width: 20px;
+    text-align: center;
+}
+
+/* Buttons */
+.btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-outline {
+    background: white;
+    border: 1px solid var(--border);
+    color: var(--dark);
+}
+
+.btn-outline:hover {
+    background: var(--light);
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #bb2d3b;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* Rejection Reason Box */
+.rejection-box {
+    background: #f8d7da;
+    border: 1px solid #f5c2c7;
+    color: #842029;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+
+.rejection-box strong {
+    display: block;
+    margin-bottom: 5px;
+}
+</style>
+
+<div class="detail-wrap">
+    
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-title">
+            <h2 style="
+    color: white;
+">{{ property.title }}</h2>
+            <p style="
+    color: white;
+"><i class="fas fa-map-marker-alt"></i> {{ property.address }}, {{ property.location }}</p>
+        </div>
+        <div>
+            <a href="{% url 'admin_properties' %}" class="btn btn-outline">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="detail-grid">
+        <!-- Left Column: Images & Details -->
+        <div>
+            <!-- Image Card -->
+            <div class="detail-card">
+                <div style="position: relative;">
+                    {% with first_image=property.images.first %}
+                        {% if first_image %}
+                            <img src="{{ first_image.image.url }}" class="main-image" id="mainImage" alt="{{ property.title }}">
+                        {% else %}
+                            <div class="main-image" style="display: flex; align-items: center; justify-content: center; color: #6c757d;">
+                                <div style="text-align: center;">
+                                    <i class="fas fa-image fa-3x"></i>
+                                    <p>No Image Available</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <div style="position: absolute; top: 15px; right: 15px;">
+                        <span class="status-badge status-{{ property.availability_status|lower }}">
+                            {{ property.availability_status }}
+                        </span>
+                    </div>
+                </div>
+                
+                {% if property.images.count > 1 %}
+                <div style="padding: 0 15px 15px;">
+                    <div class="thumbnail-grid">
+                        {% for image in property.images.all %}
+                            <img src="{{ image.image.url }}" class="thumbnail {% if forloop.first %}active{% endif %}" 
+                                 onclick="changeImage(this, '{{ image.image.url }}')" alt="Thumbnail">
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Description Card -->
+            <div class="detail-card">
+                <div class="card-header">
+                    <h3>Description</h3>
+                </div>
+                <div class="card-body">
+                    <p style="color: #495057; line-height: 1.6;">{{ property.description|default:"No description provided." }}</p>
+                    
+                    <div class="features-list">
+                        <div class="feature-item">
+                            <i class="fas fa-bed"></i> {{ property.bedrooms }} Bedrooms
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-bath"></i> {{ property.bathrooms }} Bathrooms
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-vector-square"></i> {{ property.size_sqft }} sq.ft
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-couch"></i> {{ property.furnishing }}
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-tag"></i> {{ property.home_type.name }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Owner & Stats -->
+        <div>
+            <!-- Price Card -->
+            <div class="detail-card">
+                <div class="card-body" style="text-align: center;">
+                    <p style="margin: 0; color: #6c757d; font-size: 14px;">Monthly Rent</p>
+                    <h2 style="color: var(--primary); margin: 5px 0;">₹{{ property.rent_amount|floatformat:0 }}</h2>
+                    <p style="margin: 0; font-size: 12px; color: #858796;">
+                        Created: {{ property.created_at|date:"M d, Y" }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Owner Card -->
+            <div class="detail-card">
+                <div class="card-header">
+                    <h3>Owner Details</h3>
+                </div>
+                <div class="card-body">
+                    <div class="owner-box">
+                        <div class="owner-avatar">
+                            {{ property.owner.name|first|upper }}
+                        </div>
+                        <div class="owner-info">
+                            <h4 style="
+    color: black;
+">{{ property.owner.name }}</h4>
+                            <p><i class="fas fa-envelope"></i> {{ property.owner.login.email }}</p>
+                            <p><i class="fas fa-phone"></i> {{ property.owner.phone }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Property Info Card -->
+            <div class="detail-card">
+                <div class="card-header">
+                    <h3>Property Info</h3>
+                </div>
+                <div class="card-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Category</div>
+                            <div class="info-value">{{ property.home_type.name }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Status</div>
+                            <div class="info-value">{{ property.availability_status }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Furnishing</div>
+                            <div class="info-value">{{ property.furnishing }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Size</div>
+                            <div class="info-value">{{ property.size_sqft }} sqft</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions Card -->
+            <div class="detail-card">
+                <div class="card-header">
+                    <h3>Actions</h3>
+                </div>
+                <div class="card-body">
+                    <div class="action-buttons">
+                        <a href="mailto:{{ property.owner.login.email }}" class="btn btn-outline" style="width: 100%; justify-content: center;">
+                            <i class="fas fa-envelope"></i> Contact Owner
+                        </a>
+                    </div>
+                    
+                    {% if property.availability_status != 'Occupied' %}
+                    <div class="action-buttons">
+                        <button class="btn btn-danger" style="width: 100%; justify-content: center;" onclick="openRejectModal('{{ property.id }}', '{{ property.title|escapejs }}')">
+                            <i class="fas fa-times"></i> Reject Property
+                        </button>
+                    </div>
+                    {% endif %}
+
+                    {% if property.rejection_reason %}
+                    <div class="rejection-box">
+                        <strong>Rejection Reason:</strong>
+                        {{ property.rejection_reason }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Rejection Modal (Same structure as list page for consistency) -->
+<div class="modal-overlay" id="rejectModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="modal-content" style="background: white; border-radius: 12px; width: 90%; max-width: 500px;">
+        <div class="modal-header" style="padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="color: #dc3545; margin: 0;">Reject Property</h3>
+            <button onclick="closeRejectModal()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+        </div>
+        
+        <form method="POST" action="{% url 'admin_reject_property' property.id %}" id="rejectForm">
+            {% csrf_token %}
+            <div style="padding: 20px;">
+                <p id="rejectPropertyTitle"></p>
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Reason for Rejection <span style="color: red;">*</span></label>
+                <textarea name="rejection_reason" id="rejectionReason" 
+                          style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; min-height: 100px;"
+                          placeholder="Enter reason..." required></textarea>
+            </div>
+            
+            <div style="padding: 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" class="btn btn-outline" onclick="closeRejectModal()">Cancel</button>
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-times"></i> Confirm Rejection
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Change main image on thumbnail click
+function changeImage(thumb, imageUrl) {
+    document.getElementById('mainImage').src = imageUrl;
+    
+    // Remove active class from all thumbnails
+    document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+    
+    // Add active class to clicked thumbnail
+    thumb.classList.add('active');
+}
+
+// Reject Modal
+function openRejectModal(propertyId, propertyTitle) {
+    document.getElementById('rejectModal').style.display = 'flex';
+    document.getElementById('rejectPropertyTitle').innerHTML = `<span style="color:#dc3545;">Are you sure you want to reject <strong>${propertyTitle}</strong>?</span>`;
+    document.body.style.overflow = 'hidden';
+}
+
+function closeRejectModal() {
+    document.getElementById('rejectModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('rejectModal');
+    if (event.target == modal) {
+        closeRejectModal();
+    }
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,976 @@
+{% extends "user_nav.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+:root {
+    --primary: #198754;
+    --secondary: #6c757d;
+    --light: #f8f9fa;
+    --dark: #212529;
+    --border: #dee2e6;
+    --card-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    --hover-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+/* Main Container */
+.browse-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Header */
+.browse-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--border);
+    color:white;
+}
+
+.browse-header h1 {
+   
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.browse-header p {
+    color: var(--secondary);
+    font-size: 1.1rem;
+}
+
+/* Tabs Navigation */
+.nav-tabs-custom {
+    border-bottom: 3px solid var(--border);
+    margin-bottom: 30px;
+}
+
+.nav-tabs-custom .nav-link {
+    border: none;
+    color: var(--secondary);
+    font-weight: 600;
+    font-size: 1.1rem;
+    padding: 12px 30px;
+    margin-right: 5px;
+    border-radius: 8px 8px 0 0;
+    transition: all 0.3s ease;
+}
+
+.nav-tabs-custom .nav-link:hover {
+    color: var(--primary);
+    background-color: rgba(25, 135, 84, 0.05);
+}
+
+.nav-tabs-custom .nav-link.active {
+    color: var(--primary);
+    background-color: white;
+    border-bottom: 3px solid var(--primary);
+    position: relative;
+}
+
+.nav-tabs-custom .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--primary);
+}
+
+/* Filter Panel */
+.filter-panel {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: var(--card-shadow);
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+}
+
+.filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--border);
+}
+
+.filter-header h3 {
+    color: var(--dark);
+    margin: 0;
+    font-size: 1.4rem;
+}
+
+.reset-btn {
+    background: none;
+    border: none;
+    color: var(--primary);
+    cursor: pointer;
+    font-weight: 600;
+    padding: 5px 15px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.reset-btn:hover {
+    background-color: rgba(25, 135, 84, 0.1);
+}
+
+.filter-group {
+    margin-bottom: 25px;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--dark);
+    font-size: 0.95rem;
+}
+
+.form-control-custom {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.form-control-custom:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.1);
+}
+
+.select-custom {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 16px 12px;
+    appearance: none;
+    padding-right: 40px;
+}
+
+.price-range, .size-range {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.apply-filters {
+    width: 100%;
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.apply-filters:hover {
+    background: #157347;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(25, 135, 84, 0.2);
+}
+
+/* Results Section */
+.results-section {
+    padding-left: 30px;
+}
+
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.results-header h2 {
+    
+    margin: 0;
+    font-size: 1.6rem;
+}
+
+.results-count {
+    color: var(--secondary);
+    font-size: 0.95rem;
+    background: var(--light);
+    padding: 5px 15px;
+    border-radius: 20px;
+}
+
+/* Cards Grid */
+.properties-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 25px;
+}
+
+/* Property Card */
+.property-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+    transition: all 0.3s ease;
+    height: 100%;
+    border: 1px solid var(--border);
+}
+
+.property-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--hover-shadow);
+    border-color: var(--primary);
+}
+
+.card-image {
+    position: relative;
+    height: 220px;
+    overflow: hidden;
+}
+
+.card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.property-card:hover .card-image img {
+    transform: scale(1.05);
+}
+
+.image-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    backdrop-filter: blur(4px);
+}
+
+.status-badge {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    padding: 6px 15px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-available {
+    background: #d1e7dd;
+    color: #0f5132;
+}
+
+.status-occupied, .status-sold {
+    background: #f8d7da;
+    color: #842029;
+}
+
+.status-maintenance, .status-reserved {
+    background: #fff3cd;
+    color: #664d03;
+}
+
+.card-content {
+    padding: 20px;
+}
+
+.card-price {
+    color: var(--primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.card-title {
+    color: var(--dark);
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
+.card-location {
+    color: var(--secondary);
+    font-size: 0.95rem;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.feature-tag {
+    background: var(--light);
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.card-actions {
+    display: flex;
+    gap: 10px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border);
+}
+
+.view-btn {
+    flex: 1;
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.view-btn:hover {
+    background: #157347;
+}
+
+.contact-btn {
+    flex: 1;
+    background: white;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+    padding: 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.contact-btn:hover {
+    background: rgba(25, 135, 84, 0.1);
+}
+
+/* No Results */
+.no-results {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--secondary);
+}
+
+.no-results-icon {
+    font-size: 60px;
+    color: var(--border);
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.no-results h3 {
+    color: var(--dark);
+    margin-bottom: 10px;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .results-section {
+        padding-left: 0;
+        margin-top: 30px;
+    }
+    
+    .properties-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .browse-container {
+        padding: 15px;
+    }
+    
+    .properties-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .price-range, .size-range {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Tab Content Animation */
+.tab-pane {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Checkbox Styling */
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 5px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--dark);
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+}
+</style>
+
+<div class="browse-container">
+    <!-- Header -->
+    <div class="browse-header">
+        <h1>Browse Properties</h1>
+        <p>Find your perfect home or investment property</p>
+    </div>
+
+    <div class="row">
+        <!-- Filter Panel -->
+        <div class="col-lg-3">
+            <div class="filter-panel">
+                <div class="filter-header">
+                    <h3>Filters</h3>
+                    <button type="button" class="reset-btn" onclick="resetFilters()">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                
+                <form method="get" id="filterForm">
+                    <!-- Property Type -->
+                    <div class="filter-group">
+                        <label for="property_type">Property Type</label>
+                        <select name="property_type" id="property_type" class="form-control-custom select-custom" onchange="updateFilterFields()">
+                            <option value="">All Properties</option>
+                            <option value="rent" {% if property_type == 'rent' %}selected{% endif %}>For Rent</option>
+                            <option value="sale" {% if property_type == 'sale' %}selected{% endif %}>For Sale</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Location -->
+                    <div class="filter-group">
+                        <label for="location">Location</label>
+                        <select name="location" id="location" class="form-control-custom select-custom">
+                            <option value="">All Locations</option>
+                            {% for loc in locations %}
+                            <option value="{{ loc }}" {% if request.GET.location == loc %}selected{% endif %}>{{ loc }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Price Range (Common for both) -->
+                    <div class="filter-group">
+                        <label for="price_min">
+                            {% if property_type == 'rent' %}
+                                Rent Range (₹/month)
+                            {% elif property_type == 'sale' %}
+                                Price Range (₹)
+                            {% else %}
+                                Price Range
+                            {% endif %}
+                        </label>
+                        <div class="price-range">
+                            <input type="number" name="price_min" id="price_min" class="form-control-custom" 
+                                   placeholder="Min" value="{{ request.GET.price_min }}">
+                            <input type="number" name="price_max" id="price_max" class="form-control-custom" 
+                                   placeholder="Max" value="{{ request.GET.price_max }}">
+                        </div>
+                    </div>
+                    
+                    <!-- Rent-specific Filters -->
+                    <div id="rent-filters" style="display: {% if property_type == 'rent' or not property_type %}block{% else %}none{% endif %};">
+                        <!-- Home Type -->
+                        <div class="filter-group">
+                            <label for="home_type">Home Type</label>
+                            <select name="home_type" id="home_type" class="form-control-custom select-custom">
+                                <option value="">Any Type</option>
+                                {% for type in home_types %}
+                                <option value="{{ type.id }}" {% if request.GET.home_type == type.id|stringformat:"s" %}selected{% endif %}>{{ type.category_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Furnishing -->
+                        <div class="filter-group">
+                            <label for="furnishing">Furnishing</label>
+                            <select name="furnishing" id="furnishing" class="form-control-custom select-custom">
+                                <option value="">Any Furnishing</option>
+                                {% for key, value in furnishing_types %}
+                                <option value="{{ key }}" {% if request.GET.furnishing == key %}selected{% endif %}>{{ value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Bedrooms & Bathrooms -->
+                        <div class="filter-group">
+                            <label>Rooms</label>
+                            <div class="price-range">
+                                <select name="bedrooms" id="bedrooms" class="form-control-custom select-custom">
+                                    <option value="">Bedrooms</option>
+                                    <option value="1" {% if request.GET.bedrooms == '1' %}selected{% endif %}>1 Bed</option>
+                                    <option value="2" {% if request.GET.bedrooms == '2' %}selected{% endif %}>2 Beds</option>
+                                    <option value="3" {% if request.GET.bedrooms == '3' %}selected{% endif %}>3 Beds</option>
+                                    <option value="4" {% if request.GET.bedrooms == '4' %}selected{% endif %}>4+ Beds</option>
+                                </select>
+                                <select name="bathrooms" id="bathrooms" class="form-control-custom select-custom">
+                                    <option value="">Bathrooms</option>
+                                    <option value="1" {% if request.GET.bathrooms == '1' %}selected{% endif %}>1 Bath</option>
+                                    <option value="2" {% if request.GET.bathrooms == '2' %}selected{% endif %}>2 Baths</option>
+                                    <option value="3" {% if request.GET.bathrooms == '3' %}selected{% endif %}>3+ Baths</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Size Range -->
+                        {% comment %} <div class="filter-group">
+                            <label for="size_min">Size (sq ft)</label>
+                            <div class="size-range">
+                                <input type="number" name="size_min" id="size_min" class="form-control-custom" 
+                                       placeholder="Min" value="{{ request.GET.size_min }}">
+                                <input type="number" name="size_max" id="size_max" class="form-control-custom" 
+                                       placeholder="Max" value="{{ request.GET.size_max }}">
+                            </div>
+                        </div> {% endcomment %}
+                    </div>
+                    
+                    <!-- Sale-specific Filters -->
+                    <div id="sale-filters" style="display: {% if property_type == 'sale' or not property_type %}block{% else %}none{% endif %};">
+                        <!-- Plot Type -->
+                        <div class="filter-group">
+                            <label for="plot_type">Plot Type</label>
+                            <select name="plot_type" id="plot_type" class="form-control-custom select-custom">
+                                <option value="">Any Type</option>
+                                {% for key, value in plot_types %}
+                                <option value="{{ key }}" {% if request.GET.plot_type == key %}selected{% endif %}>{{ value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Area Range -->
+                        <div class="filter-group">
+                            <label for="area_min">Area (sq ft)</label>
+                            <div class="size-range">
+                                <input type="number" name="area_min" id="area_min" class="form-control-custom" 
+                                       placeholder="Min" value="{{ request.GET.area_min }}">
+                                <input type="number" name="area_max" id="area_max" class="form-control-custom" 
+                                       placeholder="Max" value="{{ request.GET.area_max }}">
+                            </div>
+                        </div>
+                        
+                        <!-- Features -->
+                        <div class="filter-group">
+                            <label>Features</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="water" value="true" 
+                                           {% if request.GET.water == 'true' %}checked{% endif %}>
+                                    <span>Water Supply</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="electricity" value="true" 
+                                           {% if request.GET.electricity == 'true' %}checked{% endif %}>
+                                    <span>Electricity</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="gated" value="true" 
+                                           {% if request.GET.gated == 'true' %}checked{% endif %}>
+                                    <span>Gated Community</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="apply-filters">
+                        <i class="fas fa-filter"></i> Apply Filters
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Results Section -->
+        <div class="col-lg-9">
+            <div class="results-section">
+                <div class="results-header">
+                    <h2 id="results-title">
+                        {% if property_type == 'rent' %}
+                            Properties for Rent
+                        {% elif property_type == 'sale' %}
+                            Plots for Sale
+                        {% else %}
+                            All Properties
+                        {% endif %}
+                    </h2>
+                    <div class="results-count" id="results-count">
+                        {% if property_type == 'rent' %}
+                            {{ properties|length }} properties found
+                        {% elif property_type == 'sale' %}
+                            {{ plots|length }} plots found
+                        {% else %}
+                            {{ properties|length|add:plots|length }} properties found
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Tabs Navigation -->
+                <ul class="nav nav-tabs-custom" id="propertyTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link {% if property_type == 'rent' or not property_type %}active{% endif %}" 
+                                id="rent-tab" data-bs-toggle="tab" data-bs-target="#rent" type="button" role="tab"
+                                onclick="switchTab('rent')">
+                            <i class="fas fa-home me-2"></i>For Rent ({{ properties|length }})
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link {% if property_type == 'sale' %}active{% endif %}" 
+                                id="sale-tab" data-bs-toggle="tab" data-bs-target="#sale" type="button" role="tab"
+                                onclick="switchTab('sale')">
+                            <i class="fas fa-landmark me-2"></i>For Sale ({{ plots|length }})
+                        </button>
+                    </li>
+                </ul>
+                
+                <!-- Tab Content -->
+                <div class="tab-content" id="propertyTabsContent">
+                    <!-- Rent Tab -->
+                    <div class="tab-pane fade {% if property_type == 'rent' or not property_type %}show active{% endif %}" 
+                         id="rent" role="tabpanel">
+                        {% if properties %}
+                            <div class="properties-grid">
+                                {% for prop in properties %}
+                                <div class="property-card">
+                                    <div class="card-image">
+                                        {% if prop.images.all %}
+                                            <img src="{{ prop.images.first.image.url }}" alt="{{ prop.title }}">
+                                        {% else %}
+                                            <div style="background: #f8f9fa; height: 100%; display: flex; align-items: center; justify-content: center;">
+                                                <i class="fas fa-home fa-3x text-secondary"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div class="image-badge">
+                                            <i class="fas fa-camera"></i> {{ prop.images.count }}
+                                        </div>
+                                        <div class="status-badge status-{{ prop.availability_status|lower }}">
+                                            {{ prop.availability_status }}
+                                        </div>
+                                    </div>
+                                    <div class="card-content">
+                                        <div class="card-price">₹{{ prop.rent_amount|floatformat:0 }}/month</div>
+                                        <h3 class="card-title">{{ prop.title }}</h3>
+                                        <div class="card-location">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            {{ prop.location }}
+                                        </div>
+                                        <div class="card-features">
+                                            <span class="feature-tag">
+                                                <i class="fas fa-bed"></i> {{ prop.bedrooms }} Bed
+                                            </span>
+                                            <span class="feature-tag">
+                                                <i class="fas fa-bath"></i> {{ prop.bathrooms }} Bath
+                                            </span>
+                                            <span class="feature-tag">
+                                                <i class="fas fa-vector-square"></i> {{ prop.size_sqft }} sq ft
+                                            </span>
+                                            {% if prop.furnishing %}
+                                            <span class="feature-tag">
+                                                <i class="fas fa-couch"></i> {{ prop.furnishing }}
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        <p class="card-text" style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">
+                                            {{ prop.description|truncatechars:120 }}
+                                        </p>
+                                        <div class="card-actions">
+                                            <button class="view-btn" onclick="viewProperty('rent', {{ prop.id }})">
+                                                <i class="fas fa-eye"></i> View Details
+                                            </button>
+                                            <button class="contact-btn" onclick="contactOwner('rent', {{ prop.id }})">
+                                                <i class="fas fa-phone"></i> Contact
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="no-results">
+                                <div class="no-results-icon">
+                                    <i class="fas fa-home"></i>
+                                </div>
+                                <h3>No Rental Properties Found</h3>
+                                <p>Try adjusting your filters or search criteria</p>
+                                {% if property_type == 'rent' %}
+                                <button class="btn btn-outline-primary mt-3" onclick="resetFilters()">
+                                    <i class="fas fa-redo"></i> Reset Filters
+                                </button>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Sale Tab -->
+                    <div class="tab-pane fade {% if property_type == 'sale' %}show active{% endif %}" 
+                         id="sale" role="tabpanel">
+                        {% if plots %}
+                            <div class="properties-grid">
+                                {% for plot in plots %}
+                                <div class="property-card">
+                                    <div class="card-image">
+                                        {% if plot.images.all %}
+                                            <img src="{{ plot.images.first.image.url }}" alt="{{ plot.title }}">
+                                        {% else %}
+                                            <div style="background: #f8f9fa; height: 100%; display: flex; align-items: center; justify-content: center;">
+                                                <i class="fas fa-landmark fa-3x text-secondary"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div class="image-badge">
+                                            <i class="fas fa-camera"></i> {{ plot.images.count }}
+                                        </div>
+                                        <div class="status-badge status-{{ plot.availability_status|lower }}">
+                                            {{ plot.availability_status }}
+                                        </div>
+                                    </div>
+                                    <div class="card-content">
+                                        <div class="card-price">₹{{ plot.price|floatformat:0 }}</div>
+                                        <h3 class="card-title">{{ plot.title }}</h3>
+                                        <div class="card-location">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            {{ plot.address }}
+                                        </div>
+                                        <div class="card-features">
+                                            <span class="feature-tag">
+                                                <i class="fas fa-vector-square"></i> {{ plot.area }} sq ft
+                                            </span>
+                                            <span class="feature-tag">
+                                                <i class="fas fa-tag"></i> {{ plot.plot_type }}
+                                            </span>
+                                            {% if plot.water %}
+                                            <span class="feature-tag">
+                                                <i class="fas fa-tint"></i> Water
+                                            </span>
+                                            {% endif %}
+                                            {% if plot.electricity %}
+                                            <span class="feature-tag">
+                                                <i class="fas fa-bolt"></i> Electricity
+                                            </span>
+                                            {% endif %}
+                                            {% if plot.gated_community %}
+                                            <span class="feature-tag">
+                                                <i class="fas fa-shield-alt"></i> Gated
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        <p class="card-text" style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">
+                                            {{ plot.description|truncatechars:120 }}
+                                        </p>
+                                        <div class="card-actions">
+                                            <button class="view-btn" onclick="viewProperty('sale', {{ plot.id }})">
+                                                <i class="fas fa-eye"></i> View Details
+                                            </button>
+                                            <button class="contact-btn" onclick="contactOwner('sale', {{ plot.id }})">
+                                                <i class="fas fa-phone"></i> Contact
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="no-results">
+                                <div class="no-results-icon">
+                                    <i class="fas fa-landmark"></i>
+                                </div>
+                                <h3>No Plots Found</h3>
+                                <p>Try adjusting your filters or search criteria</p>
+                                {% if property_type == 'sale' %}
+                                <button class="btn btn-outline-primary mt-3" onclick="resetFilters()">
+                                    <i class="fas fa-redo"></i> Reset Filters
+                                </button>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Tab switching function
+function switchTab(tabType) {
+    // Update property type in filter form
+    document.getElementById('property_type').value = tabType;
+    
+    // Show/hide appropriate filters
+    updateFilterFields();
+    
+    // Update results title and count
+    updateResultsInfo(tabType);
+    
+    // Submit form to apply filters
+    document.getElementById('filterForm').submit();
+}
+
+// Update filter fields based on property type
+function updateFilterFields() {
+    const propertyType = document.getElementById('property_type').value;
+    const rentFilters = document.getElementById('rent-filters');
+    const saleFilters = document.getElementById('sale-filters');
+    
+    if (propertyType === 'rent') {
+        rentFilters.style.display = 'block';
+        saleFilters.style.display = 'none';
+    } else if (propertyType === 'sale') {
+        rentFilters.style.display = 'none';
+        saleFilters.style.display = 'block';
+    } else {
+        // Show both when "All Properties" is selected
+        rentFilters.style.display = 'block';
+        saleFilters.style.display = 'block';
+    }
+}
+
+// Update results information
+function updateResultsInfo(tabType) {
+    const resultsTitle = document.getElementById('results-title');
+    const resultsCount = document.getElementById('results-count');
+    
+    if (tabType === 'rent') {
+        resultsTitle.textContent = 'Properties for Rent';
+    } else if (tabType === 'sale') {
+        resultsTitle.textContent = 'Plots for Sale';
+    } else {
+        resultsTitle.textContent = 'All Properties';
+    }
+}
+
+// Reset filters - FIXED
+function resetFilters() {
+    const form = document.getElementById('filterForm');
+    
+    // 1. Reset all <select> dropdowns to their first option (which is usually the "All" / empty value)
+    const selects = form.querySelectorAll('select');
+    selects.forEach(select => {
+        if (select.options.length > 0) {
+            select.selectedIndex = 0; 
+        }
+    });
+
+    // 2. Clear all number and text inputs
+    const inputs = form.querySelectorAll('input[type="number"], input[type="text"]');
+    inputs.forEach(input => {
+        input.value = '';
+    });
+
+    // 3. Uncheck all checkboxes
+    const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    
+    // 4. Ensure property_type is explicitly set to empty (All Properties)
+    document.getElementById('property_type').value = '';
+    
+    // 5. Show all filters (since we are resetting to "All Properties")
+    document.getElementById('rent-filters').style.display = 'block';
+    document.getElementById('sale-filters').style.display = 'block';
+    
+    // 6. Submit the form
+    form.submit();
+}
+
+// View property details
+function viewProperty(type, id) {
+    if (type === 'rent') {
+        window.location.href = `/property/detail/${id}/`;
+    } else {
+        window.location.href = `/plot/detail/${id}/`;
+    }
+}
+
+// Contact owner
+function contactOwner(type, id) {
+    // You can implement a modal or redirect to contact page
+    alert(`Contact functionality for ${type} ID: ${id} will be implemented here.`);
+    // Example: window.location.href = `/contact/${type}/${id}/`;
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize filter fields based on current selection
+    updateFilterFields();
+    
+    // Set active tab based on URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const propertyType = urlParams.get('property_type') || '';
+    
+    if (propertyType === 'sale') {
+        // Activate sale tab
+        const saleTab = document.getElementById('sale-tab');
+        const rentTab = document.getElementById('rent-tab');
+        const saleContent = document.getElementById('sale');
+        const rentContent = document.getElementById('rent');
+        
+        if (saleTab && rentTab && saleContent && rentContent) {
+            saleTab.classList.add('active');
+            rentTab.classList.remove('active');
+            saleContent.classList.add('show', 'active');
+            rentContent.classList.remove('show', 'active');
+        }
+    }
+});
+</script>
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+{% endblock %}

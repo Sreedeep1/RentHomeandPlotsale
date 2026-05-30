@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Property Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary-black: #121212;
+            --secondary-black: #1e1e1e;
+            --light-black: #2d2d2d;
+            --border-color: #3a3a3a;
+            --pure-white: #ffffff;
+            --light-gray: #f5f5f5;
+            --medium-gray: #aaaaaa;
+            --dark-gray: #555555;
+        }
+
+        body {
+            background-color: var(--primary-black);
+            color: var(--pure-white);
+            line-height: 1.6;
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background-color: var(--secondary-black);
+            border-right: 1px solid var(--border-color);
+            padding: 20px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .logo {
+            padding: 0 20px 30px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--pure-white);
+        }
+
+        .logo span {
+            color: var(--medium-gray);
+            font-weight: 300;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0 15px;
+        }
+
+        .nav-item {
+            margin-bottom: 5px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            color: var(--pure-white);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background-color: var(--light-black);
+            color: var(--pure-white);
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 30px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header h2 {
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--light-black);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            border: 2px solid var(--medium-gray);
+        }
+
+        /* Stats Cards */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background-color: var(--secondary-black);
+            border-radius: 12px;
+            padding: 25px;
+            border-left: 4px solid var(--medium-gray);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            background-color: var(--light-black);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: var(--medium-gray);
+            font-size: 14px;
+        }
+
+        /* Content Sections */
+        .content-section {
+            background-color: var(--secondary-black);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background-color: var(--light-black);
+            color: var(--pure-white);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .btn:hover {
+            background-color: var(--dark-gray);
+        }
+
+        .btn-view-all {
+            font-size: 14px;
+            padding: 8px 16px;
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 15px;
+            border-bottom: 2px solid var(--border-color);
+            color: var(--medium-gray);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tr:hover {
+            background-color: var(--light-black);
+        }
+
+        .status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background-color: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+        }
+
+        .status-approved {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+
+        .status-rejected {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        .status-blocked {
+            background-color: rgba(108, 117, 125, 0.1);
+            color: #6c757d;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            margin-right: 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            background-color: var(--secondary-black);
+            color: var(--pure-white);
+        }
+
+        .action-btn:hover {
+            background-color: var(--dark-gray);
+        }
+
+        /* Chart Containers */
+        .chart-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .chart-box {
+            background-color: var(--secondary-black);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid var(--border-color);
+        }
+
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .chart-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 70px;
+                padding: 20px 0;
+            }
+            
+            .logo h1 span {
+                display: none;
+            }
+            
+            .logo h1 {
+                font-size: 20px;
+            }
+            
+            .nav-link span {
+                display: none;
+            }
+            
+            .nav-icon {
+                margin-right: 0;
+                font-size: 22px;
+            }
+            
+            .main-content {
+                margin-left: 70px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .header h2 {
+                font-size: 22px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .user-info {
+                align-self: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>Admin<span>Dashboard</span></h1>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{%url 'admin_dashboard'%}" class="nav-link active" data-section="dashboard">
+                        <i class="fas fa-tachometer-alt nav-icon"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{%url 'admin_properties'%}" class="nav-link" data-section="homes">
+                        <i class="fas fa-home nav-icon"></i>
+                        <span>Manage Properties</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{%url 'admin_plots'%}" class="nav-link" data-section="plots">
+                        <i class="fas fa-map-marker-alt nav-icon"></i>
+                        <span>Manage Plots</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{%url 'view_users'%}" class="nav-link" data-section="users">
+                        <i class="fas fa-users nav-icon"></i>
+                        <span>Manage Users</span>
+                    </a>
+                </li>
+                 <li class="nav-item">
+                    <a href="{%url 'category_page'%}" class="nav-link" data-section="users">
+                        <i class="fas fa-users nav-icon"></i>
+                        <span>Manage Categories</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{%url 'admin_analytics'%}" class="nav-link" data-section="reports">
+                        <i class="fas fa-chart-bar nav-icon"></i>
+                        <span>View Reports</span>
+                    </a>
+                </li>
+                 <li class="nav-item">
+                    <a href="{%url 'admin_feedback_list'%}" class="nav-link" data-section="reports">
+                        <i class="fas fa-chart-bar nav-icon"></i>
+                        <span>View Feedbacks</span>
+                    </a>
+                </li>
+                 <li class="nav-item">
+                    <a href="{%url 'logout'%}" class="nav-link">
+                        <i class="fas fa-sign-out"></i>
+                        <span>Logout</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <h2>Admin Dashboard</h2>
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div>
+                        <h4>Administrator</h4>
+                        <p>System Admin</p>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Overview -->
+            <section id="dashboard" class="content-section active-section">
+               {%block content%}
+               {%endblock%}
+            </section>
+        </main>
+    </div>
+
+    <script>
+     
+        
+        function initializeCharts() {
+            // Property Listing Chart
+            const propertyCtx = document.getElementById('propertyChart').getContext('2d');
+            const propertyChart = new Chart(propertyCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Properties Listed',
+                        data: [45, 68, 75, 92, 110, 124],
+                        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                        borderColor: 'rgba(255, 255, 255, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.8)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.8)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'rgba(255, 255, 255, 0.8)'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // User Registration Chart
+            const userCtx = document.getElementById('userChart').getContext('2d');
+            const userChart = new Chart(userCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Approved', 'Pending', 'Rejected', 'Blocked'],
+                    datasets: [{
+                        data: [65, 12, 8, 5],
+                        backgroundColor: [
+                            'rgba(40, 167, 69, 0.7)',
+                            'rgba(255, 193, 7, 0.7)',
+                            'rgba(220, 53, 69, 0.7)',
+                            'rgba(108, 117, 125, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(40, 167, 69, 1)',
+                            'rgba(255, 193, 7, 1)',
+                            'rgba(220, 53, 69, 1)',
+                            'rgba(108, 117, 125, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                padding: 20
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Rental Request Chart
+            const rentalCtx = document.getElementById('rentalChart').getContext('2d');
+            const rentalChart = new Chart(rentalCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
+                    datasets: [{
+                        label: 'Rental Requests',
+                        data: [32, 45, 28, 51, 42],
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        borderColor: 'rgba(255, 255, 255, 1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.8)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.8)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'rgba(255, 255, 255, 0.8)'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Revenue Chart
+            const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+            const revenueChart = new Chart(revenueCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Revenue ($)',
+                        data: [12500, 18700, 22400, 19800, 25600, 31200],
+                        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                        borderColor: 'rgba(255, 255, 255, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                callback: function(value) {
+                                    return '$' + value;
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.8)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'rgba(255, 255, 255, 0.8)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

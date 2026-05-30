@@ -1,0 +1,199 @@
+<!-- add_property_images_modal.html -->
+<div class="modal-header">
+    <h5 class="modal-title">Add Images to "{{ property.title }}"</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+
+<div class="modal-body">
+    <!-- Existing Images -->
+    {% if property.images.all %}
+    <div class="mb-4">
+        <h6>Current Images ({{ property.images.count }})</h6>
+        <div class="row g-2">
+            {% for img in property.images.all|slice:":6" %}
+            <div class="col-4 col-md-3">
+                <div class="border rounded p-1 text-center">
+                    <img src="{{ img.image.url }}" class="img-fluid" style="height: 60px; object-fit: cover;">
+                </div>
+            </div>
+            {% endfor %}
+            {% if property.images.count > 6 %}
+            <div class="col-12 text-muted">
+                <small>... and {{ property.images.count|add:"-6" }} more images</small>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Upload Form -->
+    <form id="addImagesForm" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="property_id" value="{{ property.id }}">
+        
+        <div class="mb-3">
+            <label class="form-label fw-bold">Select Images to Upload</label>
+            <div class="image-upload-area border rounded p-4 text-center" 
+                 onclick="document.getElementById('imageInput').click()"
+                 style="cursor: pointer; background-color: #f8f9fa; border: 2px dashed #dee2e6;">
+                <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                <p class="mb-1">Click to select images or drag and drop</p>
+                <small class="text-muted">PNG, JPG, GIF up to 5MB each</small>
+            </div>
+            <input type="file" 
+                   name="images" 
+                   id="imageInput" 
+                   multiple 
+                   accept="image/*" 
+                   style="display: none;">
+        </div>
+
+        <!-- Image Preview -->
+        <div id="imagePreview" class="row g-2 mt-3"></div>
+
+        <!-- Loading Spinner -->
+        <div id="uploadSpinner" class="text-center mt-3" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Uploading...</span>
+            </div>
+            <p class="mt-2">Uploading images...</p>
+        </div>
+    </form>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+    <button type="button" class="btn btn-primary" id="uploadImagesBtn">
+        <i class="fas fa-upload"></i> Upload Images
+    </button>
+</div>
+
+<script>
+// This script will be injected with the modal
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('imageInput');
+    const preview = document.getElementById('imagePreview');
+    const uploadBtn = document.getElementById('uploadImagesBtn');
+    const spinner = document.getElementById('uploadSpinner');
+    
+    // Preview images on selection
+    fileInput.addEventListener('change', function() {
+        preview.innerHTML = '';
+        const files = this.files;
+        
+        if (files.length > 0) {
+            preview.innerHTML = `<div class="col-12"><h6>Selected Files (${files.length}):</h6></div>`;
+            
+            for (let i = 0; i < Math.min(files.length, 6); i++) {
+                const file = files[i];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const col = document.createElement('div');
+                    col.className = 'col-4 col-md-3 mb-2';
+                    col.innerHTML = `
+                        <div class="border rounded p-1 text-center">
+                            <img src="${e.target.result}" class="img-fluid" style="height: 60px; object-fit: cover;">
+                            <small class="d-block text-truncate" style="font-size: 0.7rem">${file.name}</small>
+                        </div>
+                    `;
+                    preview.appendChild(col);
+                }
+                
+                reader.readAsDataURL(file);
+            }
+            
+            if (files.length > 6) {
+                const moreDiv = document.createElement('div');
+                moreDiv.className = 'col-12';
+                moreDiv.innerHTML = `<small class="text-muted">... and ${files.length - 6} more</small>`;
+                preview.appendChild(moreDiv);
+            }
+        }
+    });
+    
+    // Handle upload button click
+    uploadBtn.addEventListener('click', function() {
+        const files = fileInput.files;
+        
+        if (files.length === 0) {
+            alert('Please select at least one image to upload.');
+            return;
+        }
+        
+        // Check file sizes
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        for (let i = 0; i < files.length; i++) {
+            if (files[i].size > maxSize) {
+                alert(`File "${files[i].name}" exceeds 5MB limit.`);
+                return;
+            }
+        }
+        
+        // Show spinner
+        spinner.style.display = 'block';
+        uploadBtn.disabled = true;
+        
+        // Create FormData
+        const formData = new FormData();
+        for (let i = 0; i < files.length; i++) {
+            formData.append('images', files[i]);
+        }
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        // Upload images
+        fetch(`/property/add-images/${propertyId}/`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                preview.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> ${data.message}
+                        </div>
+                    </div>
+                `;
+                
+                // Reload page after 2 seconds
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            } else {
+                alert(data.error || 'Error uploading images');
+                spinner.style.display = 'none';
+                uploadBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error uploading images. Please try again.');
+            spinner.style.display = 'none';
+            uploadBtn.disabled = false;
+        });
+    });
+});
+</script>
+
+<style>
+.image-upload-area:hover {
+    border-color: #0d6efd !important;
+    background-color: #e7f1ff !important;
+    transition: all 0.3s ease;
+}
+
+#imagePreview .border {
+    transition: transform 0.2s ease;
+}
+
+#imagePreview .border:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+</style>

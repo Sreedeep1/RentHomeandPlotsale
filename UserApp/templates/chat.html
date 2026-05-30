@@ -1,0 +1,502 @@
+{% extends "user_nav.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4" style="max-width: 1400px;">
+    <!-- Back Button -->
+    <div class="mb-3">
+        <a href="javascript:history.back()" class="btn btn-outline-secondary rounded-pill">
+            <i class="fas fa-arrow-left me-2"></i>Back
+        </a>
+    </div>
+
+    <!-- Main Chat Container -->
+    <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+        <!-- Chat Header -->
+        <div class="chat-header bg-gradient-primary text-white p-4">
+            <div class="d-flex align-items-center">
+                <div class="position-relative">
+                    {% if other_user.profile_pic %}
+                        <img src="{{ other_user.profile_pic.url }}" 
+                             class="rounded-circle border border-3 border-white" 
+                             style="width: 60px; height: 60px; object-fit: cover;">
+                    {% else %}
+                        <div class="rounded-circle bg-white bg-opacity-25 d-flex align-items-center justify-content-center"
+                             style="width: 60px; height: 60px;">
+                            <i class="fas fa-user fa-2x text-white"></i>
+                        </div>
+                    {% endif %}
+                    <span class="position-absolute bottom-0 end-0">
+                        <i class="fas fa-circle text-success small"></i>
+                    </span>
+                </div>
+                <div class="ms-3">
+                    <h4 class="mb-0 fw-bold">{{ other_user.name }}</h4>
+                    <div class="d-flex align-items-center mt-1">
+                        <i class="fas fa-circle text-success me-2" style="font-size: 8px;"></i>
+                        <span class="small opacity-75">Online</span>
+                        <span class="mx-2">•</span>
+                        <i class="fas fa-home me-1 small"></i>
+                        <span class="small">Chat about: {{ room.property.title|default:"Property Inquiry" }}</span>
+                    </div>
+                </div>
+                <div class="ms-auto">
+                    <button class="btn btn-light rounded-circle p-3 me-2" onclick="window.location.reload()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button class="btn btn-light rounded-circle p-3" onclick="window.close()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Messages Area -->
+        <div class="chat-messages p-4" id="chatMessages" style="height: 500px; overflow-y: auto; background: #f8f9fa;">
+            <!-- Messages will be loaded here -->
+        </div>
+
+        <!-- Chat Input Area -->
+        <div class="chat-footer bg-white p-4 border-top">
+            <div class="d-flex align-items-center">
+                <button class="btn btn-light rounded-circle p-3 me-2" onclick="document.getElementById('imageInput').click()">
+                    <i class="fas fa-image text-primary"></i>
+                </button>
+                <input type="file" id="imageInput" style="display: none;" accept="image/*" onchange="uploadImage()">
+                
+                <div class="flex-grow-1 position-relative">
+                    <input type="text" 
+                           class="form-control form-control-lg rounded-pill border-0 bg-light" 
+                           id="messageInput" 
+                           placeholder="Type your message..." 
+                           style="padding-right: 60px;">
+                    <button class="btn btn-link position-absolute end-0 top-50 translate-middle-y text-primary" 
+                            onclick="sendMessage()" style="text-decoration: none;">
+                        <i class="fas fa-smile fa-lg"></i>
+                    </button>
+                </div>
+                
+                <button class="btn btn-primary rounded-circle p-3 ms-2" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            <div class="small text-muted text-center mt-2">
+                <i class="fas fa-lock me-1"></i>End-to-end encrypted
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+/* Gradient Header */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #0ead63 0%, #068d21 100%);
+}
+
+/* Chat Messages Styling */
+.chat-messages {
+    scroll-behavior: smooth;
+}
+
+.message-wrapper {
+    display: flex;
+    margin-bottom: 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+.message-wrapper.sent {
+    justify-content: flex-end;
+}
+
+.message-wrapper.received {
+    justify-content: flex-start;
+}
+
+.message-bubble {
+    max-width: 70%;
+    padding: 12px 18px;
+    border-radius: 20px;
+    position: relative;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.message-bubble.sent {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-bottom-right-radius: 5px;
+}
+
+.message-bubble.received {
+    background: white;
+    color: #333;
+    border-bottom-left-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.message-content {
+    font-size: 0.95rem;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+.message-time {
+    font-size: 0.7rem;
+    opacity: 0.7;
+    margin-top: 5px;
+    display: block;
+}
+
+.sent .message-time {
+    color: rgba(255,255,255,0.8);
+}
+
+.received .message-time {
+    color: #999;
+}
+
+.message-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    margin-right: 10px;
+    object-fit: cover;
+}
+
+.message-avatar-placeholder {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    margin-right: 10px;
+}
+
+/* Typing Indicator */
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    width: fit-content;
+    margin-bottom: 20px;
+}
+
+.typing-indicator span {
+    height: 8px;
+    width: 8px;
+    margin: 0 2px;
+    background: #999;
+    border-radius: 50%;
+    display: inline-block;
+    animation: typing 1.5s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typing {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-10px); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Scrollbar Styling */
+.chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .message-bubble {
+        max-width: 85%;
+    }
+    
+    .chat-header h4 {
+        font-size: 1.1rem;
+    }
+    
+    .chat-footer .btn {
+        padding: 10px !important;
+    }
+    
+    .chat-footer .btn i {
+        font-size: 1rem;
+    }
+
+
+}
+
+
+/* Message bubble arrows */
+.message-bubble.sent::after {
+    content: '';
+    position: absolute;
+    right: -8px;
+    top: 12px;
+    width: 0;
+    height: 0;
+    border-left: 10px solid #764ba2;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+}
+
+.message-bubble.received::after {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 12px;
+    width: 0;
+    height: 0;
+    border-right: 10px solid white;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+}
+
+/* Better message bubble gradients */
+.message-bubble.sent {
+    background: linear-gradient(135deg, #0ead63 0%, #068d21 100%);
+    color: white;
+    border-bottom-right-radius: 5px;
+    position: relative;
+}
+
+.message-bubble.received {
+    background: white;
+    color: #333;
+    border-bottom-left-radius: 5px;
+    position: relative;
+}
+
+/* Message time styling */
+.message-time {
+    font-size: 0.65rem;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+}
+
+/* Read receipt icon */
+.fa-check-double {
+    color: #87CEEB;
+}
+
+/* Message wrapper spacing */
+.message-wrapper {
+    margin-bottom: 16px;
+}
+
+/* Avatar and message alignment */
+.received .d-flex {
+    align-items: flex-end;
+}
+
+/* Hover effect on messages */
+.message-bubble:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: all 0.2s ease;
+}
+</style>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+let roomId = "{{ room.id }}";
+let currentUserId = "{{ request.session.user_id }}";
+let lastMessageCount = 0;
+
+// Load messages function
+function loadMessages() {
+    fetch(`/get_messages/${roomId}/`)
+        .then(response => response.json())
+        .then(messages => {
+            displayMessages(messages);
+        })
+        .catch(error => console.error('Error loading messages:', error));
+}
+
+// Display messages with proper styling
+function displayMessages(messages) {
+    const chatBox = document.getElementById('chatMessages');
+    
+    if (!messages || messages.length === 0) {
+        chatBox.innerHTML = `
+            <div class="text-center py-5">
+                <i class="fas fa-comments fa-4x text-muted mb-3 opacity-50"></i>
+                <h5 class="text-muted">No messages yet</h5>
+                <p class="text-muted small">Send a message to start the conversation</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    let lastDate = '';
+    
+    messages.forEach(msg => {
+        // Add date separator
+        const msgDate = msg.date;
+        if (msgDate !== lastDate) {
+            html += `
+                <div class="text-center my-3">
+                    <span class="bg-light px-3 py-1 rounded-pill small text-muted">
+                        ${new Date(msgDate).toLocaleDateString('en-US', { 
+                            weekday: 'short', 
+                            month: 'short', 
+                            day: 'numeric' 
+                        })}
+                    </span>
+                </div>
+            `;
+            lastDate = msgDate;
+        }
+        
+        // Check if message is sent by current user
+        const isSent = parseInt(msg.sender_id) === parseInt(currentUserId);
+        
+        if (isSent) {
+            // Sent message (right side)
+            html += `
+                <div class="message-wrapper sent">
+                    <div class="message-bubble sent">
+                        <div class="message-content">${escapeHtml(msg.message)}</div>
+                        <div class="message-time">
+                            ${msg.time}
+                            <i class="fas fa-check-double ms-1" style="font-size: 0.7rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Received message (left side)
+            html += `
+                <div class="message-wrapper received">
+                    <div class="d-flex align-items-start">
+                        {% if other_user.profile_pic %}
+                            <img src="{{ other_user.profile_pic.url }}" 
+                                 class="message-avatar me-2" 
+                                 style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover;">
+                        {% else %}
+                            <div class="message-avatar-placeholder me-2" 
+                                 style="width: 35px; height: 35px; border-radius: 50%; background: #e0e0e0; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-user" style="color: #999;"></i>
+                            </div>
+                        {% endif %}
+                        <div class="message-bubble received">
+                            <div class="message-content">${escapeHtml(msg.message)}</div>
+                            <div class="message-time">${msg.time}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    });
+    
+    chatBox.innerHTML = html;
+    scrollToBottom();
+}
+
+// Helper function to escape HTML
+function escapeHtml(unsafe) {
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+// Send message function
+function sendMessage() {
+    const messageInput = document.getElementById('messageInput');
+    const message = messageInput.value.trim();
+    
+    if (!message) return;
+    
+    // Disable input while sending
+    messageInput.disabled = true;
+    
+    fetch('/send_message/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: `room_id=${roomId}&message=${encodeURIComponent(message)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'ok') {
+            messageInput.value = '';
+            loadMessages(); // Reload messages immediately
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to send message');
+    })
+    .finally(() => {
+        messageInput.disabled = false;
+        messageInput.focus();
+    });
+}
+
+// Scroll to bottom function
+function scrollToBottom() {
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    // Load messages immediately
+    loadMessages();
+    
+    // Set up polling (every 3 seconds)
+    setInterval(loadMessages, 3000);
+    
+    // Send on Enter key
+    const messageInput = document.getElementById('messageInput');
+    if (messageInput) {
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        messageInput.focus();
+    }
+});
+
+// Remove the old jQuery code as we're using vanilla JS now
+</script>
+{%endblock%}

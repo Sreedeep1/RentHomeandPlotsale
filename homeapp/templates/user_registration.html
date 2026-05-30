@@ -1,0 +1,373 @@
+{% extends "index_nav.html" %}
+{% block content %}
+<style>
+    .header {
+        background-color: black !important;
+    }
+    
+    .signup-container {
+        max-width: 450px;
+        margin: 80px auto;
+        padding: 40px;
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .signup-title {
+        text-align: center;
+        color: #333;
+        font-size: 28px;
+        font-weight: 600;
+        margin-bottom: 30px;
+        letter-spacing: -0.5px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        color: #555;
+        font-weight: 500;
+        font-size: 14px;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 2px solid #e1e5e9;
+        border-radius: 10px;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        background: #f8f9fa;
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: #4f46e5;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+    
+    .form-input::placeholder {
+        color: #999;
+    }
+    
+    .error-message {
+        background: #fee;
+        color: #d32f2f;
+        padding: 10px 14px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        border-left: 4px solid #d32f2f;
+        font-size: 13px;
+    }
+    
+    .field-error {
+        background: #fee;
+        color: #d32f2f;
+        padding: 8px 12px;
+        border-radius: 6px;
+        margin-top: 5px;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .field-error i {
+        margin-right: 6px;
+    }
+    
+    .signup-btn {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, #4f46e5 0%, #7c73e6 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 10px;
+    }
+    
+    .signup-btn:hover {
+        background: linear-gradient(135deg, #4338ca 0%, #6d63d9 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(79, 70, 229, 0.3);
+    }
+    
+    .signup-btn:active {
+        transform: translateY(0);
+    }
+    
+    .divider {
+        display: flex;
+        align-items: center;
+        margin: 25px 0;
+        color: #999;
+    }
+    
+    .divider::before,
+    .divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: #e1e5e9;
+    }
+    
+    .divider span {
+        padding: 0 15px;
+        font-size: 14px;
+    }
+    
+    .login-link {
+        text-align: center;
+        margin-top: 25px;
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .login-link a {
+        color: #4f46e5;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    .login-link a:hover {
+        text-decoration: underline;
+    }
+    
+    .form-header {
+        color: #4f46e5;
+        font-size: 16px;
+        font-weight: 600;
+        margin: 25px 0 15px 0;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #e1e5e9;
+    }
+    
+    .form-header:first-child {
+        margin-top: 0;
+    }
+    
+    .password-hint {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+        margin-left: 5px;
+    }
+    
+    @media (max-width: 480px) {
+        .signup-container {
+            margin: 60px 20px;
+            padding: 30px 25px;
+        }
+    }
+</style>
+
+<div class="signup-container">
+    <h2 class="signup-title">Create Account</h2>
+
+    <!-- Non-field errors -->
+    {% if form.non_field_errors %}
+        <div class="error-message">
+            <i class="fas fa-exclamation-circle"></i>
+            {% for error in form.non_field_errors %}
+                {{ error }}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-header">
+            <i class="fas fa-user-circle"></i> Account Information
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input 
+                type="email" 
+                name="email" 
+                class="form-input" 
+                placeholder="Enter your email"
+                value="{{ form.email.value|default:'' }}"
+                required
+            >
+            {% if form.email.errors %}
+                <div class="field-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    {{ form.email.errors.0 }}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+            <label class="form-label">Password</label>
+            <input 
+                type="password" 
+                name="password" 
+                class="form-input" 
+                placeholder="Create a strong password"
+                required
+            >
+            {% if form.password.errors %}
+                <div class="field-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    {{ form.password.errors.0 }}
+                </div>
+            {% endif %}
+            <div class="password-hint">
+                <i class="fas fa-info-circle"></i> Use at least 8 characters with letters and numbers
+            </div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-group">
+            <label class="form-label">Confirm Password</label>
+            <input 
+                type="password" 
+                name="confirm_password" 
+                class="form-input" 
+                placeholder="Re-enter your password"
+                required
+            >
+            {% if form.confirm_password.errors %}
+                <div class="field-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    {{ form.confirm_password.errors.0 }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-header">
+            <i class="fas fa-id-card"></i> Personal Information
+        </div>
+
+        <!-- Name -->
+        <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input 
+                type="text" 
+                name="name" 
+                class="form-input" 
+                placeholder="Enter your full name"
+                value="{{ form.name.value|default:'' }}"
+                required
+            >
+            {% if form.name.errors %}
+                <div class="field-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    {{ form.name.errors.0 }}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Phone -->
+        <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <input 
+                type="tel" 
+                name="phone" 
+                class="form-input" 
+                placeholder="Enter your phone number"
+                value="{{ form.phone.value|default:'' }}"
+                required
+            >
+            {% if form.phone.errors %}
+                <div class="field-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    {{ form.phone.errors.0 }}
+                </div>
+            {% endif %}
+        </div>
+
+        <button type="submit" class="signup-btn">
+            Create Account
+        </button>
+
+        <div class="divider">
+            <span>Already have an account?</span>
+        </div>
+
+        <div class="login-link">
+            Already registered? <a href="/login">Sign in here</a>
+        </div>
+    </form>
+</div>
+
+<!-- Font Awesome for icons -->
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+<script>
+    // Form submission feedback
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function() {
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
+                    submitBtn.disabled = true;
+                }
+            });
+        }
+        
+        // Add input field validation styling
+        const inputs = document.querySelectorAll('.form-input');
+        inputs.forEach(input => {
+            // Add focus styling
+            input.addEventListener('focus', function() {
+                this.parentElement.classList.add('focused');
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.classList.remove('focused');
+            });
+            
+            // Add validation styling
+            input.addEventListener('input', function() {
+                if (this.value.trim() !== '') {
+                    this.classList.add('has-value');
+                } else {
+                    this.classList.remove('has-value');
+                }
+            });
+            
+            // Check initial state
+            if (input.value.trim() !== '') {
+                input.classList.add('has-value');
+            }
+        });
+        
+        // Password confirmation validation
+        const password = document.querySelector('input[name="password"]');
+        const confirmPassword = document.querySelector('input[name="confirm_password"]');
+        
+        function validatePasswordMatch() {
+            if (password.value && confirmPassword.value && password.value !== confirmPassword.value) {
+                confirmPassword.style.borderColor = '#d32f2f';
+                confirmPassword.style.boxShadow = '0 0 0 3px rgba(211, 47, 47, 0.1)';
+            } else if (confirmPassword.value) {
+                confirmPassword.style.borderColor = '#4f46e5';
+                confirmPassword.style.boxShadow = '0 0 0 3px rgba(79, 70, 229, 0.1)';
+            }
+        }
+        
+        if (password && confirmPassword) {
+            password.addEventListener('input', validatePasswordMatch);
+            confirmPassword.addEventListener('input', validatePasswordMatch);
+        }
+    });
+</script>
+
+{% endblock %}

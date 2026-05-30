@@ -1,0 +1,805 @@
+{% extends "user_nav.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    .interested-properties-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    /* Header Section */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .page-title h1 {
+        font-size: 2rem;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-title p {
+        color: #666;
+        font-size: 1rem;
+    }
+
+    .unread-badge {
+        background: #ff4757;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Filter Section */
+    .filters-section {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        align-items: center;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .filter-group label {
+        font-size: 0.9rem;
+        color: #666;
+        font-weight: 500;
+    }
+
+    .filter-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid #ddd;
+        background: white;
+        border-radius: 20px;
+        color: #666;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 0.9rem;
+    }
+
+    .filter-btn:hover {
+        border-color: #667eea;
+        color: #667eea;
+    }
+
+    .filter-btn.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-color: transparent;
+    }
+
+    .time-filter select {
+        padding: 0.5rem 1rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        color: #333;
+        font-size: 0.9rem;
+        min-width: 150px;
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .stat-icon.total { background: #e3f2fd; color: #1976d2; }
+    .stat-icon.unread { background: #ffebee; color: #c62828; }
+    .stat-icon.owner { background: #e8f5e8; color: #2e7d32; }
+    .stat-icon.renter { background: #fff3e0; color: #f57c00; }
+
+    .stat-details h3 {
+        font-size: 1.5rem;
+        color: #333;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-details p {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    /* Chat Cards Grid */
+    .properties-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .chat-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+        transition: transform 0.3s, box-shadow 0.3s;
+        border: 1px solid #eee;
+        position: relative;
+    }
+
+    .chat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+    }
+
+    .chat-card.unread {
+        border-left: 4px solid #ff4757;
+    }
+
+    .chat-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-bottom: 1px solid #eee;
+    }
+
+    .property-image {
+        width: 80px;
+        height: 80px;
+        border-radius: 12px;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+
+    .property-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .property-info {
+        flex: 1;
+    }
+
+    .property-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.25rem;
+    }
+
+    .property-address {
+        font-size: 0.9rem;
+        color: #666;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .property-price {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #28a745;
+    }
+
+    .property-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .badge-owner {
+        background: #e3f2fd;
+        color: #1976d2;
+    }
+
+    .badge-renter {
+        background: #fff3e0;
+        color: #f57c00;
+    }
+
+    .chat-body {
+        padding: 1rem;
+    }
+
+    .chat-participants {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .participant-avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .participant-name {
+        font-weight: 500;
+        color: #333;
+    }
+
+    .last-message {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        position: relative;
+    }
+
+    .message-sender {
+        font-size: 0.8rem;
+        color: #667eea;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .message-text {
+        color: #333;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        margin-bottom: 0.5rem;
+        word-break: break-word;
+    }
+
+    .message-time {
+        font-size: 0.75rem;
+        color: #999;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .unread-indicator {
+        background: #ff4757;
+        color: white;
+        padding: 0.2rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .chat-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85rem;
+        color: #666;
+        margin-top: 0.5rem;
+    }
+
+    .chat-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    .btn-chat, .btn-view, .btn-contact {
+        flex: 1;
+        padding: 0.75rem;
+        text-align: center;
+        text-decoration: none;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.3s;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-chat {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-chat:hover {
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-view {
+        background: white;
+        color: #333;
+        border: 1px solid #ddd;
+    }
+
+    .btn-view:hover {
+        background: #f8f9fa;
+        text-decoration: none;
+    }
+
+    .btn-contact {
+        background: #28a745;
+        color: white;
+    }
+
+    .btn-contact:hover {
+        background: #218838;
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Property Specs */
+    .property-specs {
+        display: flex;
+        gap: 1rem;
+        margin-top: 0.5rem;
+        font-size: 0.85rem;
+        color: #666;
+    }
+
+    .spec-item {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .spec-item i {
+        color: #667eea;
+    }
+
+    /* Pagination */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .page-link {
+        padding: 0.5rem 1rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        color: #333;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+
+    .page-link:hover {
+        background: #f8f9fa;
+        border-color: #667eea;
+    }
+
+    .page-link.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-color: transparent;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .empty-state-icon {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 2rem;
+        background: #f8f9fa;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: #667eea;
+    }
+
+    .empty-state h3 {
+        font-size: 1.8rem;
+        color: #333;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state p {
+        color: #666;
+        font-size: 1.1rem;
+        max-width: 500px;
+        margin: 0 auto 2rem;
+        line-height: 1.6;
+    }
+
+    .btn-browse {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem 2rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-decoration: none;
+        border-radius: 30px;
+        font-weight: 500;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .btn-browse:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Loading Spinner */
+    .loading-spinner {
+        text-align: center;
+        padding: 3rem;
+    }
+
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .properties-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .chat-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .property-image {
+            width: 100%;
+            height: 150px;
+        }
+
+        .filters-section {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .filter-buttons {
+            justify-content: center;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .chat-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<div class="interested-properties-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-title">
+            <h1>Interested Properties</h1>
+            <p>Properties you've discussed through chat</p>
+        </div>
+        {% if unread_total > 0 %}
+            <div class="unread-badge">
+                <i class="fas fa-envelope"></i>
+                {{ unread_total }} Unread Message{{ unread_total|pluralize }}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon total">
+                <i class="fas fa-comments"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ total_chats }}</h3>
+                <p>Total Chats</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon unread">
+                <i class="fas fa-envelope"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ unread_total }}</h3>
+                <p>Unread Messages</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon owner">
+                <i class="fas fa-home"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ interested_properties|length }}</h3>
+                <p>Active Chats</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section">
+        <div class="filter-group">
+            <label>Filter by:</label>
+            <div class="filter-buttons">
+                <a href="?filter=all" class="filter-btn {% if current_filter == 'all' %}active{% endif %}">
+                    All Chats
+                </a>
+                <a href="?filter=unread" class="filter-btn {% if current_filter == 'unread' %}active{% endif %}">
+                    <i class="fas fa-envelope"></i> Unread
+                </a>
+                <a href="?filter=owner" class="filter-btn {% if current_filter == 'owner' %}active{% endif %}">
+                    <i class="fas fa-user-tie"></i> As Owner
+                </a>
+                <a href="?filter=renter" class="filter-btn {% if current_filter == 'renter' %}active{% endif %}">
+                    <i class="fas fa-user"></i> As Renter
+                </a>
+            </div>
+        </div>
+        
+        <div class="filter-group">
+            <label>Time period:</label>
+            <div class="time-filter">
+                <select onchange="window.location.href=this.value">
+                    <option value="?filter={{ current_filter }}&time=all" {% if current_time_filter == 'all' %}selected{% endif %}>
+                        All Time
+                    </option>
+                    <option value="?filter={{ current_filter }}&time=today" {% if current_time_filter == 'today' %}selected{% endif %}>
+                        Today
+                    </option>
+                    <option value="?filter={{ current_filter }}&time=week" {% if current_time_filter == 'week' %}selected{% endif %}>
+                        Last 7 Days
+                    </option>
+                    <option value="?filter={{ current_filter }}&time=month" {% if current_time_filter == 'month' %}selected{% endif %}>
+                        Last 30 Days
+                    </option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Properties Grid -->
+    {% if interested_properties %}
+        <div class="properties-grid">
+            {% for item in interested_properties %}
+                <div class="chat-card {% if item.has_unread %}unread{% endif %}">
+                    <!-- Property Badge -->
+                    <span class="property-badge {% if item.is_owner %}badge-owner{% else %}badge-renter{% endif %}">
+                        {% if item.is_owner %}
+                            <i class="fas fa-home"></i> You are Owner
+                        {% else %}
+                            <i class="fas fa-user"></i> You are Renter
+                        {% endif %}
+                    </span>
+
+                    <!-- Header with Property Image -->
+                    <div class="chat-header">
+                        <div class="property-image">
+                            <img src="{{ item.first_image_url }}" alt="{{ item.property_title }}">
+                        </div>
+                        <div class="property-info">
+                            <h3 class="property-title">{{ item.property_title }}</h3>
+                            <div class="property-address">
+                                <i class="fas fa-map-marker-alt"></i>
+                                {{ item.property_address|truncatechars:50 }}
+                            </div>
+                            <div class="property-price">₹ {{ item.property_rent }}</div>
+                            
+                            <!-- Property Specs -->
+                            <div class="property-specs">
+                                <span class="spec-item">
+                                    <i class="fas fa-bed"></i> {{ item.property_bedrooms }} Beds
+                                </span>
+                                <span class="spec-item">
+                                    <i class="fas fa-bath"></i> {{ item.property_bathrooms }} Baths
+                                </span>
+                                <span class="spec-item">
+                                    <i class="fas fa-vector-square"></i> {{ item.property_size }} sq.ft
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Body -->
+                    <div class="chat-body">
+                        <!-- Chat Participants -->
+                        <div class="chat-participants">
+                            <div class="participant-avatar">
+                                {{ item.other_user_name|first|upper }}
+                            </div>
+                            <span class="participant-name">{{ item.other_user_name }}</span>
+                            <i class="fas fa-chevron-right" style="color: #ddd; font-size: 12px;"></i>
+                            <span class="participant-name">You</span>
+                        </div>
+
+                        <!-- Last Message -->
+                        <div class="last-message">
+                            <div class="message-sender">
+                                {% if item.last_message_sender_id == request.session.user_id %}
+                                    You:
+                                {% else %}
+                                    {{ item.other_user_name }}:
+                                {% endif %}
+                            </div>
+                            <div class="message-text">
+                                {{ item.last_message_text }}
+                            </div>
+                            <div class="message-time">
+                                <i class="far fa-clock"></i>
+                                {{ item.last_activity|timesince }} ago
+                                {% if item.has_unread %}
+                                    <span class="unread-indicator">
+                                        {{ item.unread_count }} new
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Chat Meta Info -->
+                        <div class="chat-meta">
+                            <span>
+                                <i class="far fa-comment-dots"></i>
+                                {{ item.total_messages }} messages
+                            </span>
+                            <span>
+                                <i class="far fa-calendar-alt"></i>
+                                Started {{ item.chat_started_at|date:"M d, Y" }}
+                            </span>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="chat-actions">
+                            <a href="{% url 'chat_room' item.chat_room.id %}" class="btn-chat">
+                                <i class="fas fa-comment"></i> Open Chat
+                            </a>
+                            <a href="{% url 'property_detail' item.property_id %}" class="btn-view">
+                                <i class="fas fa-eye"></i> View Property
+                            </a>
+                            {% if not item.is_owner %}
+                                <a href="tel:{{ item.other_user_phone }}" class="btn-contact">
+                                    <i class="fas fa-phone"></i> Contact
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.paginator.num_pages > 1 %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}&filter={{ current_filter }}&time={{ current_time_filter }}" 
+                       class="page-link">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <span class="page-link active">{{ num }}</span>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <a href="?page={{ num }}&filter={{ current_filter }}&time={{ current_time_filter }}" 
+                           class="page-link">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}&filter={{ current_filter }}&time={{ current_time_filter }}" 
+                       class="page-link">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+
+    {% else %}
+        <!-- Empty State -->
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fas fa-comments"></i>
+            </div>
+            <h3>No Chat History Yet</h3>
+            <p>
+                You haven't started any conversations about properties yet. 
+                Browse properties and start chatting with owners or interested buyers!
+            </p>
+            <a href="{% url 'property_list' %}" class="btn-browse">
+                <i class="fas fa-search"></i> Browse Properties
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<script>
+    // Auto-refresh unread counts every 30 seconds
+    function refreshUnreadCounts() {
+        fetch(window.location.href + '?format=json')
+            .then(response => response.json())
+            .then(data => {
+                // Update unread counts without page reload
+                const unreadBadges = document.querySelectorAll('.unread-indicator');
+                // Update logic here
+            });
+    }
+
+    // Optional: Refresh every 30 seconds
+    // setInterval(refreshUnreadCounts, 30000);
+
+    // Mark messages as read when opening chat
+    document.querySelectorAll('.btn-chat').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            // Optional: AJAX call to mark messages as read
+        });
+    });
+</script>
+{% endblock %}

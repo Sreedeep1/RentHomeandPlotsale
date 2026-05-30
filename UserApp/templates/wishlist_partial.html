@@ -1,0 +1,827 @@
+{% load static %}
+
+<div class="wishlist-container">
+    {% if wishlist_items %}
+        <div class="wishlist-header">
+            <h3>My Wishlist ({{ wishlist_items|length }})</h3>
+            <p class="text-muted">Your favorite plots saved for later</p>
+        </div>
+        
+        <div class="wishlist-grid">
+            {% for item in wishlist_items %}
+                <div class="wishlist-card" data-wishlist-id="{{ item.id }}">
+                    <div class="card-image">
+                        {% if item.plot.images.first %}
+                           <img src="{{ item.plot.image_url }}" alt="{{ item.plot.title }}">
+                        {% else %}
+                            <img src="{% static 'images/no-image.jpg' %}" alt="No Image Available">
+                        {% endif %}
+                        
+                        {% if item.plot.availability_status == 'Available' %}
+                            <span class="status-badge available">Available</span>
+                        {% elif item.plot.availability_status == 'Reserved' %}
+                            <span class="status-badge reserved">Reserved</span>
+                        {% else %}
+                            <span class="status-badge sold">Sold</span>
+                        {% endif %}
+                        
+                        <button class="favorite-btn active" onclick="toggleWishlist({{ item.plot.id }})">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="card-content">
+                        <h4 class="plot-title">{{ item.plot.title }}</h4>
+                        
+                        <div class="plot-location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>{{ item.plot.address|truncatechars:40 }}</span>
+                        </div>
+                        
+                        <div class="plot-price">₹ {{ item.plot.price|floatformat:2 }}</div>
+                        
+                        <div class="plot-specs">
+                            <div class="spec-item" title="Area">
+                                <i class="fas fa-vector-square"></i>
+                                <span>{{ item.plot.area }} sq.ft</span>
+                            </div>
+                            
+                            <div class="spec-item" title="Plot Type">
+                                <i class="fas fa-tag"></i>
+                                <span>{{ item.plot.get_plot_type_display|truncatechars:15 }}</span>
+                            </div>
+                            
+                            <div class="spec-item" title="Added to Wishlist">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>{{ item.created_at|date:"M d, Y" }}</span>
+                            </div>
+                        </div>
+                        
+                        {% if item.plot.water or item.plot.electricity or item.plot.gated_community %}
+                            <div class="plot-amenities">
+                                <span class="amenities-label">Amenities:</span>
+                                <div class="amenities-icons">
+                                    {% if item.plot.water %}
+                                        <span class="amenity-icon" title="Water Available">
+                                            <i class="fas fa-water"></i>
+                                        </span>
+                                    {% endif %}
+                                    {% if item.plot.electricity %}
+                                        <span class="amenity-icon" title="Electricity Connected">
+                                            <i class="fas fa-bolt"></i>
+                                        </span>
+                                    {% endif %}
+                                    {% if item.plot.gated_community %}
+                                        <span class="amenity-icon" title="Gated Community">
+                                            <i class="fas fa-shield-alt"></i>
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="card-actions">
+                            <a href="{% url 'plot_detail' item.plot.id %}" class="btn-view">
+                                <i class="fas fa-eye"></i> View Details
+                            </a>
+                            
+                            <button class="btn-remove" onclick="removeFromWishlist({{ item.plot.id }})">
+                                <i class="fas fa-trash-alt"></i> Remove
+                            </button>
+                        </div>
+                        
+                        <!-- Hidden form for removal -->
+                        <form id="remove-wishlist-form-{{ item.plot.id }}" 
+                              action="{% url 'remove_from_wishlist' item.plot.id %}" 
+                              method="POST" 
+                              style="display: none;">
+                            {% csrf_token %}
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="wishlist-actions">
+            <button class="btn-compare" onclick="comparePlots()">
+                <i class="fas fa-balance-scale"></i> Compare Selected
+            </button>
+            <button class="btn-clear-all" onclick="clearAllWishlist()">
+                <i class="fas fa-trash-alt"></i> Clear Wishlist
+            </button>
+        </div>
+        
+        <!-- Hidden form for clearing all -->
+        <form id="clear-wishlist-form" action="{% url 'clear_wishlist' %}" method="POST" style="display: none;">
+            {% csrf_token %}
+        </form>
+        
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fas fa-heart-broken"></i>
+            </div>
+            <h3>Your Wishlist is Empty</h3>
+            <p class="empty-message">
+                Looks like you haven't added any plots to your wishlist yet. 
+                Browse through our collection and save your favorite plots!
+            </p>
+            <div class="empty-state-suggestions">
+                <h4>Popular Categories:</h4>
+                <div class="category-chips">
+                    <a href="{% url 'plot_list' %}?type=Residential" class="chip">Residential Plots</a>
+                    <a href="{% url 'plot_list' %}?type=Commercial" class="chip">Commercial Plots</a>
+                    <a href="{% url 'plot_list' %}?type=Purayidam" class="chip">Purayidam</a>
+                    <a href="{% url 'plot_list' %}?type=Gated" class="chip">Gated Community</a>
+                </div>
+            </div>
+            <a href="{% url 'plot_list' %}" class="btn-browse">
+                <i class="fas fa-search"></i> Browse Plots
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Compare Modal -->
+<div id="compareModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeCompareModal()">&times;</span>
+        <h3>Compare Plots</h3>
+        <div id="compareContent" class="compare-content">
+            <!-- Compare content will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<style>
+    .wishlist-container {
+        padding: 20px;
+    }
+
+    .wishlist-header {
+        margin-bottom: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .wishlist-header h3 {
+        font-size: 24px;
+        color: #333;
+        margin-bottom: 5px;
+    }
+
+    .wishlist-header .text-muted {
+        color: #666;
+        font-size: 14px;
+    }
+
+    .wishlist-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 25px;
+        margin-bottom: 30px;
+    }
+
+    .wishlist-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        transition: transform 0.3s, box-shadow 0.3s;
+        border: 1px solid #eee;
+        position: relative;
+    }
+
+    .wishlist-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+
+    .card-image {
+        position: relative;
+        height: 200px;
+        overflow: hidden;
+    }
+
+    .card-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s;
+    }
+
+    .wishlist-card:hover .card-image img {
+        transform: scale(1.05);
+    }
+
+    .status-badge {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        z-index: 1;
+    }
+
+    .status-badge.available {
+        background: #28a745;
+        color: white;
+    }
+
+    .status-badge.reserved {
+        background: #ffc107;
+        color: #333;
+    }
+
+    .status-badge.sold {
+        background: #dc3545;
+        color: white;
+    }
+
+    .favorite-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: white;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        transition: all 0.3s;
+        z-index: 1;
+    }
+
+    .favorite-btn i {
+        color: #ff4757;
+        font-size: 20px;
+    }
+
+    .favorite-btn:hover {
+        transform: scale(1.1);
+        background: #ff4757;
+    }
+
+    .favorite-btn:hover i {
+        color: white;
+    }
+
+    .card-content {
+        padding: 20px;
+    }
+
+    .plot-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 10px;
+        line-height: 1.4;
+    }
+
+    .plot-location {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+
+    .plot-location i {
+        color: #ff4757;
+    }
+
+    .plot-price {
+        font-size: 24px;
+        font-weight: 700;
+        color: #28a745;
+        margin-bottom: 15px;
+    }
+
+    .plot-specs {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 15px;
+        padding: 10px 0;
+        border-top: 1px solid #eee;
+        border-bottom: 1px solid #eee;
+    }
+
+    .spec-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        font-size: 12px;
+        color: #666;
+        text-align: center;
+    }
+
+    .spec-item i {
+        font-size: 16px;
+        color: #ff4757;
+    }
+
+    .plot-amenities {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+    }
+
+    .amenities-label {
+        font-size: 13px;
+        color: #666;
+        font-weight: 500;
+    }
+
+    .amenities-icons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .amenity-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: help;
+        transition: all 0.3s;
+    }
+
+    .amenity-icon:hover {
+        background: #ff4757;
+        color: white;
+        transform: scale(1.1);
+    }
+
+    .card-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-view, .btn-remove {
+        flex: 1;
+        padding: 10px;
+        text-align: center;
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-view {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-view:hover {
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        color: white;
+        text-decoration: none;
+        transform: translateY(-2px);
+    }
+
+    .btn-remove {
+        background: #fff;
+        color: #dc3545;
+        border: 1px solid #dc3545;
+    }
+
+    .btn-remove:hover {
+        background: #dc3545;
+        color: white;
+    }
+
+    /* Wishlist Actions */
+    .wishlist-actions {
+        display: flex;
+        gap: 15px;
+        justify-content: flex-end;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 2px solid #eee;
+    }
+
+    .btn-compare, .btn-clear-all {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-compare {
+        background: #007bff;
+        color: white;
+    }
+
+    .btn-compare:hover {
+        background: #0056b3;
+    }
+
+    .btn-clear-all {
+        background: #dc3545;
+        color: white;
+    }
+
+    .btn-clear-all:hover {
+        background: #c82333;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .empty-state-icon {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 25px;
+        background: linear-gradient(135deg, #fff5f5 0%, #ffe0e0 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: pulse 2s infinite;
+    }
+
+    .empty-state-icon i {
+        font-size: 50px;
+        color: #ff4757;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    .empty-state h3 {
+        font-size: 28px;
+        color: #333;
+        margin-bottom: 15px;
+    }
+
+    .empty-message {
+        color: #666;
+        font-size: 16px;
+        max-width: 500px;
+        margin: 0 auto 25px;
+        line-height: 1.6;
+    }
+
+    .empty-state-suggestions {
+        margin: 30px 0;
+    }
+
+    .empty-state-suggestions h4 {
+        font-size: 16px;
+        color: #333;
+        margin-bottom: 15px;
+    }
+
+    .category-chips {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .chip {
+        padding: 8px 16px;
+        background: #f0f0f0;
+        border-radius: 20px;
+        color: #333;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.3s;
+    }
+
+    .chip:hover {
+        background: #ff4757;
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-browse {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 30px;
+        background: linear-gradient(135deg, #ff4757 0%, #ff6b81 100%);
+        color: white;
+        text-decoration: none;
+        border-radius: 25px;
+        font-weight: 500;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .btn-browse:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        animation: fadeIn 0.3s;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 5% auto;
+        padding: 30px;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 800px;
+        max-height: 80vh;
+        overflow-y: auto;
+        position: relative;
+        animation: slideIn 0.3s;
+    }
+
+    @keyframes slideIn {
+        from { transform: translateY(-50px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+
+    .close {
+        position: absolute;
+        right: 20px;
+        top: 15px;
+        font-size: 28px;
+        font-weight: bold;
+        color: #666;
+        cursor: pointer;
+        transition: color 0.3s;
+    }
+
+    .close:hover {
+        color: #ff4757;
+    }
+
+    .compare-content {
+        margin-top: 20px;
+    }
+
+    /* Loading State */
+    .loading-spinner {
+        text-align: center;
+        padding: 40px;
+    }
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #ff4757;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 15px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .wishlist-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .wishlist-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .plot-specs {
+            grid-template-columns: 1fr;
+        }
+
+        .wishlist-actions {
+            flex-direction: column;
+        }
+
+        .btn-compare, .btn-clear-all {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .category-chips {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .chip {
+            width: 100%;
+            text-align: center;
+        }
+    }
+</style>
+
+<script>
+    function removeFromWishlist(plotId) {
+        if (confirm('Are you sure you want to remove this plot from your wishlist?')) {
+            const form = document.getElementById(`remove-wishlist-form-${plotId}`);
+            
+            // Add loading state
+            const button = event.target.closest('.btn-remove');
+            if (button) {
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Removing...';
+                button.disabled = true;
+            }
+            
+            form.submit();
+        }
+    }
+
+    function toggleWishlist(plotId) {
+        // This function can be used to toggle wishlist status
+        // You can implement AJAX call here for better UX
+        removeFromWishlist(plotId);
+    }
+
+    function clearAllWishlist() {
+        if (confirm('Are you sure you want to remove all plots from your wishlist? This action cannot be undone.')) {
+            document.getElementById('clear-wishlist-form').submit();
+        }
+    }
+
+    function comparePlots() {
+        // Get all wishlist items
+        const wishlistCards = document.querySelectorAll('.wishlist-card');
+        
+        if (wishlistCards.length < 2) {
+            alert('Please add at least 2 plots to your wishlist for comparison.');
+            return;
+        }
+        
+        // Show compare modal
+        const modal = document.getElementById('compareModal');
+        const compareContent = document.getElementById('compareContent');
+        
+        // Build comparison table
+        let comparisonHTML = '<table class="compare-table">';
+        comparisonHTML += '<tr><th>Features</th>';
+        
+        wishlistCards.forEach(card => {
+            const title = card.querySelector('.plot-title').textContent;
+            comparisonHTML += `<th>${title}</th>`;
+        });
+        
+        comparisonHTML += '</tr>';
+        
+        // Add features rows
+        const features = ['Price', 'Area', 'Location', 'Type', 'Amenities'];
+        
+        features.forEach(feature => {
+            comparisonHTML += '<tr>';
+            comparisonHTML += `<td><strong>${feature}</strong></td>`;
+            
+            wishlistCards.forEach(card => {
+                let value = '';
+                
+                switch(feature) {
+                    case 'Price':
+                        value = card.querySelector('.plot-price').textContent;
+                        break;
+                    case 'Area':
+                        value = card.querySelector('.spec-item span').textContent;
+                        break;
+                    case 'Location':
+                        value = card.querySelector('.plot-location span').textContent;
+                        break;
+                    case 'Type':
+                        const specItems = card.querySelectorAll('.spec-item');
+                        value = specItems[1]?.querySelector('span')?.textContent || 'N/A';
+                        break;
+                    case 'Amenities':
+                        const amenities = card.querySelectorAll('.amenity-icon i');
+                        const amenityList = [];
+                        amenities.forEach(amenity => {
+                            if (amenity.classList.contains('fa-water')) amenityList.push('Water');
+                            if (amenity.classList.contains('fa-bolt')) amenityList.push('Electricity');
+                            if (amenity.classList.contains('fa-shield-alt')) amenityList.push('Gated');
+                        });
+                        value = amenityList.join(', ') || 'None';
+                        break;
+                }
+                
+                comparisonHTML += `<td>${value}</td>`;
+            });
+            
+            comparisonHTML += '</tr>';
+        });
+        
+        comparisonHTML += '</table>';
+        compareContent.innerHTML = comparisonHTML;
+        
+        modal.style.display = 'block';
+    }
+
+    function closeCompareModal() {
+        document.getElementById('compareModal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('compareModal');
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    // Add animation on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.wishlist-card');
+        cards.forEach((card, index) => {
+            card.style.animation = `fadeInUp 0.5s ease forwards ${index * 0.1}s`;
+        });
+    });
+
+    // Add to your CSS
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .compare-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .compare-table th,
+        .compare-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .compare-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .compare-table tr:hover {
+            background: #f5f5f5;
+        }
+    `;
+    document.head.appendChild(style);
+</script>

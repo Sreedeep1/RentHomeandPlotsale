@@ -1,0 +1,559 @@
+{% extends "user_nav.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    .profile-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    .profile-grid {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 2rem;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    /* Side Panel Styles */
+    .profile-side-panel {
+        background: linear-gradient(135deg, #138857 0%, #09754f 100%);
+        padding: 2rem 0;
+        min-height: 600px;
+    }
+    .profile-side-panel .user-info {
+        text-align: center;
+        padding: 0 1rem 1.5rem;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+        margin-bottom: 1rem;
+    }
+    .profile-side-panel .user-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        margin: 0 auto 1rem;
+        overflow: hidden;
+        border: 3px solid #fff;
+    }
+    h1,h2,h3,h4,h5,h6{
+        color: #1A242F;
+    }
+    .profile-side-panel .user-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .profile-side-panel .user-name {
+        color: #fff;
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    .profile-side-panel .user-email {
+        color: rgba(255,255,255,0.8);
+        font-size: 0.9rem;
+    }
+    .profile-tabs {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .profile-tabs li {
+        margin: 0;
+    }
+    .profile-tabs li a {
+        display: flex;
+        align-items: center;
+        padding: 1rem 2rem;
+        color: rgba(255,255,255,0.8);
+        text-decoration: none;
+        transition: all 0.3s;
+        border-left: 4px solid transparent;
+    }
+    .profile-tabs li a i {
+        width: 24px;
+        margin-right: 10px;
+        font-size: 1.1rem;
+    }
+    .profile-tabs li a:hover {
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+    }
+    .profile-tabs li.active a {
+        background: rgba(255,255,255,0.15);
+        color: #fff;
+        border-left-color: #fff;
+    }
+    /* Main Content Styles */
+    .profile-main-content {
+        padding: 2rem;
+        background: #f8f9fa;
+    }
+    .tab-content {
+        background: #fff;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    /* Form Styles */
+    .profile-form .form-group {
+        margin-bottom: 1.5rem;
+    }
+    .profile-form label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #333;
+    }
+    .profile-form .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        transition: border-color 0.3s;
+    }
+    .profile-form .form-control:focus {
+        outline: none;
+        border-color: #108075;
+    }
+    .profile-form .btn {
+        background: linear-gradient(135deg, #35ce20 0%, #11a37a 100%);
+        color: #fff;
+        padding: 0.75rem 2rem;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: opacity 0.3s;
+    }
+    .profile-form .btn:hover {
+        opacity: 0.9;
+    }
+    /* Grid Layout for Cards */
+    .plots-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    .plot-card {
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.3s;
+    }
+    .plot-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    .plot-card img {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+    }
+    .plot-card .plot-details {
+        padding: 1rem;
+    }
+    .plot-card h3 {
+        margin: 0 0 0.5rem;
+        font-size: 1.1rem;
+        color: #333;
+    }
+    .plot-card .plot-price {
+        color: #28a745;
+        font-weight: 600;
+        font-size: 1.2rem;
+        margin: 0.5rem 0;
+    }
+    .plot-card .plot-location {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+    .plot-card .plot-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    .plot-card .btn {
+        flex: 1;
+        padding: 0.5rem;
+        text-align: center;
+        text-decoration: none;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        transition: opacity 0.3s;
+    }
+    .btn-view {
+        background: #0c7a49;
+        color: #fff;
+    }
+    .btn-remove {
+        background: #dc3545;
+        color: #fff;
+    }
+    .btn:hover {
+        opacity: 0.8;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #666;
+    }
+    .empty-state i {
+        font-size: 4rem;
+        color: #ddd;
+        margin-bottom: 1rem;
+    }
+    /* Alert Messages */
+    .alert {
+        padding: 1rem;
+        border-radius: 5px;
+        margin-bottom: 1rem;
+    }
+    .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    @media (max-width: 768px) {
+        .profile-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    /* Add to your existing style section */
+.spec, .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+}
+
+.owner-info {
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.owner-info i {
+    width: 16px;
+    color: #138857;
+}
+
+.interest-message {
+    font-size: 0.9rem;
+    border-left: 3px solid #17a2b8;
+}
+
+.plot-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.plot-actions .btn {
+    flex: 1 1 auto;
+    min-width: 100px;
+    padding: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.btn-remove {
+    background: #dc3545;
+    color: white;
+    border: none;
+}
+
+.btn-remove:hover {
+    background: #c82333;
+}
+</style>
+
+<div class="profile-container">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    
+    <div class="profile-grid">
+        <!-- Left Side Panel -->
+        <div class="profile-side-panel">
+            <div class="user-info">
+            
+                <div class="user-name">{{ user.name }}</div>
+                <div class="user-email">{{ user.email }}</div>
+            </div>
+            
+            <ul class="profile-tabs">
+                <li class="{% if active_tab == 'edit_profile' %}active{% endif %}">
+                    <a href="?tab=edit_profile">
+                        <i class="fas fa-user-edit"></i>
+                        Edit Profile
+                    </a>
+                </li>
+                <li class="{% if active_tab == 'change_password' %}active{% endif %}">
+                    <a href="?tab=change_password">
+                        <i class="fas fa-key"></i>
+                        Change Password
+                    </a>
+                </li>
+                <li class="{% if active_tab == 'wishlist' %}active{% endif %}">
+                    <a href="?tab=wishlist">
+                        <i class="fas fa-heart"></i>
+                        Wishlist
+                    </a>
+                </li>
+                <li class="{% if active_tab == 'interested_plots' %}active{% endif %}">
+                    <a href="?tab=interested_plots">
+                        <i class="fas fa-star"></i>
+                        Interested Plots
+                    </a>
+                </li>
+                 <li class="{% if active_tab == 'interested_rent_properties' %}active{% endif %}">
+                    <a href="?tab=interested_rent_properties">
+                        <i class="fas fa-star"></i>
+                        Interested Rent Properties
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Right Main Content -->
+        <div class="profile-main-content">
+            <div class="tab-content">
+                {% if active_tab == 'edit_profile' %}
+                    <!-- Edit Profile Tab -->
+                    <h2>Edit Profile</h2>
+                    <form method="POST" action="{% url 'update_profile' %}" enctype="multipart/form-data" class="profile-form">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="name">Full Name</label>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ user.name }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ user.login.email }}" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" value="{{ user.phone }}">
+                        </div>
+                       
+                        {% comment %} <div class="form-group">
+                            <label for="profile_pic">Profile Picture</label>
+                            <input type="file" class="form-control" id="profile_pic" name="profile_pic" accept="image/*">
+                        </div> {% endcomment %}
+                        <button type="submit" class="btn">Update Profile</button>
+                    </form>
+                    
+                {% elif active_tab == 'change_password' %}
+                    <!-- Change Password Tab -->
+                    <h2>Change Password</h2>
+                    <form method="POST" action="{% url 'change_password' %}" class="profile-form">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="current_password">Current Password</label>
+                            <input type="password" class="form-control" id="current_password" name="current_password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new_password">New Password</label>
+                            <input type="password" class="form-control" id="new_password" name="new_password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm_password">Confirm New Password</label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                        </div>
+                        <button type="submit" class="btn">Change Password</button>
+                    </form>
+                    
+                {% elif active_tab == 'wishlist' %}
+                    <!-- Wishlist Tab -->
+                    <h2>My Wishlist</h2>
+                    {% if wishlist_items %}
+                        <div class="plots-grid">
+                            {% for item in wishlist_items %}
+                                <div class="plot-card">
+                                    {% if item.plot.images %}
+                                        <img src="{{ item.plot.images.first.image.url }}" alt="{{ item.plot.title }}">
+                                    {% else %}
+                                        <img src="{% static 'images/no-image.jpg' %}" alt="No Image">
+                                    {% endif %}
+                                    <div class="plot-details">
+                                        <h3>{{ item.plot.title }}</h3>
+                                        <div class="plot-location">
+                                            <i class="fas fa-map-marker-alt"></i> {{ item.plot.address }}
+                                        </div>
+                                        <div class="plot-price">₹ {{ item.plot.price }}</div>
+                                        <div class="plot-area">{{ item.plot.area }} sq.ft</div>
+                                        <div class="plot-actions">
+                                            <a href="{% url 'plot_detail' item.plot.id %}" class="btn btn-view">View</a>
+                                            <a href="{% url 'remove_from_wishlist' item.plot.id %}" class="btn btn-remove" onclick="return confirm('Remove from wishlist?')">Remove</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-heart-broken"></i>
+                            <h3>Your wishlist is empty</h3>
+                            <p>Start adding plots to your wishlist!</p>
+                            <a href="{% url 'browse_property' %}" class="btn">Browse Plots</a>
+                        </div>
+                    {% endif %}
+                    
+                {% elif active_tab == 'interested_plots' %}
+                    <!-- Interested Plots Tab -->
+                    <h2>Interested Plots</h2>
+                    {% if interested_items %}
+                        <div class="plots-grid">
+                            {% for item in interested_items %}
+                                <div class="plot-card">
+                                    {% if item.plot.images %}
+                                        <img src="{{ item.plot.images.first.image.url }}" alt="{{ item.plot.title }}">
+                                    {% else %}
+                                        <img src="{% static 'images/no-image.jpg' %}" alt="No Image">
+                                    {% endif %}
+                                    <div class="plot-details">
+                                        <h3>{{ item.plot.title }}</h3>
+                                        <div class="plot-location">
+                                            <i class="fas fa-map-marker-alt"></i> {{ item.plot.address }}
+                                        </div>
+                                        <div class="plot-price">₹ {{ item.plot.price }}</div>
+                                        <div class="plot-area" style="color: #1A242F;">{{ item.plot.area }} sq.ft</div>
+                                        {% if item.message %}
+                                            <div class="interest-message">
+                                                <strong>Your message:</strong>
+                                                <p>{{ item.message }}</p>
+                                            </div>
+                                        {% endif %}
+                                        <div class="plot-actions">
+                                            <a href="{% url 'plot_detail' item.plot.id %}" class="btn btn-view">View</a>
+                                            <a href="{% url 'remove_interest' item.id %}" class="btn btn-remove" onclick="return confirm('Remove interest?')">Remove</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-star"></i>
+                            <h3>No interested plots</h3>
+                            <p>You haven't shown interest in any plots yet.</p>
+                            <a href="{% url 'browse_property' %}" class="btn">Browse Plots</a>
+                        </div>
+                    {% endif %}
+                
+                  {% elif active_tab == 'interested_rent_properties' %}
+    <!-- Interested Properties for Rent Tab -->
+    <h2>Interested Properties for Rent</h2>
+    {% if interested_properties %}
+        <div class="plots-grid">
+            {% for item in interested_properties %}
+                <div class="plot-card">
+                    {% if item.plot.images.first %}
+                        <img src="{{ item.plot.images.first.image.url }}" alt="{{ item.plot.title }}">
+                    {% else %}
+                        <img src="{% static 'images/no-image.jpg' %}" alt="No Image">
+                    {% endif %}
+                    <div class="plot-details">
+                        <h3>{{ item.plot.title }}</h3>
+                        <div class="plot-location">
+                            <i class="fas fa-map-marker-alt"></i> {{ item.plot.address }}
+                        </div>
+                        <div class="plot-price">₹ {{ item.plot.rent_amount }}/month</div>
+                        
+                        <!-- Property Details -->
+                        <div class="property-specs" style="display: flex; gap: 0.5rem; margin: 0.5rem 0; flex-wrap: wrap;">
+                            <span class="spec" style="background: #0b0d0e; padding: 0.25rem 0.5rem; border-radius: 4px;">
+                                <i class="fas fa-bed"></i> {{ item.plot.bedrooms }} Beds
+                            </span>
+                            <span class="spec" style="background: #0b0d0e; padding: 0.25rem 0.5rem; border-radius: 4px;">
+                                <i class="fas fa-bath"></i> {{ item.plot.bathrooms }} Baths
+                            </span>
+                            <span class="spec" style="background: #0b0d0e; padding: 0.25rem 0.5rem; border-radius: 4px;">
+                                <i class="fas fa-vector-square"></i> {{ item.plot.size_sqft }} sq.ft
+                            </span>
+                        </div>
+                        
+                        <!-- Furnishing Status -->
+                        <div class="furnishing" style="margin: 0.5rem 0;">
+                            <span class="badge" style="background: #0b0d0e; padding: 0.25rem 0.5rem; border-radius: 4px;">
+                                <i class="fas fa-couch"></i> {{ item.plot.furnishing }}
+                            </span>
+                            <span class="badge" style="background: {% if item.plot.availability_status == 'Available' %}#0b0d0e{% else %}#0b0d0e{% endif %}; padding: 0.25rem 0.5rem; border-radius: 4px;">
+                                {{ item.plot.availability_status }}
+                            </span>
+                        </div>
+                        
+                        <!-- Owner Info -->
+                        <div class="owner-info" style="background: #0a5577; padding: 0.5rem; border-radius: 4px; margin: 0.5rem 0;">
+                            <small>
+                                <i class="fas fa-user" style="color: #1A242F;"></i> <strong>Owner:</strong> {{ item.plot.owner.name }}<br>
+                                <i class="fas fa-phone" style="color: #1A242F;"></i> <strong>Phone:</strong> {{ item.plot.owner.phone|default:"Not available" }}<br>
+                                <i class="fas fa-envelope" style="color: #1A242F;"></i> <strong>Email:</strong> {{ item.plot.owner.login.email }}
+                            </small>
+                        </div>
+                        
+                        <!-- Chat/Interest Message -->
+                        {% if item.message %}
+                            <div class="interest-message" style="background: #0a5577; padding: 0.5rem; border-radius: 4px; margin: 0.5rem 0;">
+                                <i class="fas fa-comment"></i> <strong>Latest:</strong> {{ item.message }}<br>
+                                <small>Started: {{ item.created_at|date:"M d, Y" }}</small>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Action Buttons -->
+                        <div class="plot-actions">
+                            <a href="{% url 'property_detail' item.plot.id %}" class="btn btn-view">
+                                <i class="fas fa-eye"></i> View Property
+                            </a>
+                            
+                            {% if item.chat_room %}
+                                <a href="{% url 'owner_chat_room' item.chat_room.id %}" class="btn" style="background: #17a2b8; color: white;">
+                                    <i class="fas fa-comment"></i> Open Chat
+                                </a>
+                            {% endif %}
+                            
+                            <!-- Use a different URL for rental property removal -->
+                            <a href="{% url 'remove_rental_interest' item.plot.id %}" class="btn btn-remove" 
+                               onclick="return confirm('Remove this property from your interested list?')">
+                                <i class="fas fa-trash-alt"></i> Remove
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-home"></i>
+            <h3>No interested rental properties</h3>
+            <p>You haven't shown interest in any rental properties yet. Browse properties and start a chat with owners!</p>
+            <div style="margin: 2rem 0;">
+                <a href="{% url 'browse_property' %}?type=rent" class="btn" style="margin-right: 1rem; background: #28a745;">
+                    <i class="fas fa-search"></i> Browse Rental Properties
+                </a>
+                <a href="{% url 'browse_property' %}" class="btn" style="background: #17a2b8;">
+                    <i class="fas fa-list"></i> View All Properties
+                </a>
+            </div>
+        </div>
+    {% endif %}
+    {%endif%}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "user_nav.html" %}
+
+{% block content %}
+<h3>Add Images to {{ property.title }}</h3>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div class="mb-3">
+        {{ form.image.label_tag }}
+        {{ form.image }}
+        {% for error in form.image.errors %}
+            <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+    <button type="submit" class="btn btn-primary">Upload Images</button>
+    <a href="{% url 'edit_property' property.id %}" class="btn btn-secondary">Cancel</a>
+</form>
+
+<h5 class="mt-4">Existing Images</h5>
+<div class="row">
+    {% for img in property.images.all %}
+        <div class="col-3 mb-3">
+            <img src="{{ img.image.url }}" class="img-fluid" />
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

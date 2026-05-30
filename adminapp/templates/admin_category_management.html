@@ -1,0 +1,259 @@
+{% extends 'admin_nav.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="header">
+        <h2>Category Management</h2>
+        <div class="user-info">
+            <div class="user-avatar">
+                <i class="fas fa-tags"></i>
+            </div>
+            <div>
+                <h4>Administrator</h4>
+                <p>Manage Categories</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-container">
+        <div class="stat-card" style="border-left-color: #ff6b6b;">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value">{{ categories|length }}</div>
+                    <div class="stat-label">Total Categories</div>
+                </div>
+                <div class="stat-icon" style="background-color: rgba(255, 107, 107, 0.1);">
+                    <i class="fas fa-tags" style="color: #ff6b6b;"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card" style="border-left-color: #4ecdc4;">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Products in Categories</div>
+                </div>
+                <div class="stat-icon" style="background-color: rgba(78, 205, 196, 0.1);">
+                    <i class="fas fa-box" style="color: #4ecdc4;"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card" style="border-left-color: #ffd166;">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value">100%</div>
+                    <div class="stat-label">Active Categories</div>
+                </div>
+                <div class="stat-icon" style="background-color: rgba(255, 209, 102, 0.1);">
+                    <i class="fas fa-check-circle" style="color: #ffd166;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" style="display: flex; flex-wrap: wrap; margin: -15px;">
+        <!-- Categories Table -->
+        <div class="col-lg-8" style="padding: 15px;">
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fas fa-list me-2"></i>Categories List
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th width="60">#</th>
+                                <th>Category Name</th>
+                                <th width="120">Status</th>
+                                <th width="180">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cat in categories %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <div style="width: 36px; height: 36px; border-radius: 50%; background-color: var(--light-black); display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--pure-white);">
+                                            {{ cat.name|first|upper }}
+                                        </div>
+                                        <strong>{{ cat.name }}</strong>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="status status-approved">Active</span>
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 8px;">
+                                        <a href="{% url 'edit_category' cat.id %}" 
+                                           class="action-btn" 
+                                           style="background-color: rgba(255, 193, 7, 0.1); color: #ffc107; border-color: rgba(255, 193, 7, 0.3);">
+                                            <i class="fas fa-edit me-1"></i>Edit
+                                        </a>
+                                        <a href="{% url 'delete_category' cat.id %}"
+                                           class="action-btn"
+                                           style="background-color: rgba(220, 53, 69, 0.1); color: #dc3545; border-color: rgba(220, 53, 69, 0.3);"
+                                           onclick="return confirm('Are you sure you want to delete \"{{ cat.name }}\"?')">
+                                            <i class="fas fa-trash me-1"></i>Delete
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" style="text-align: center; padding: 60px 20px;">
+                                    <div style="text-align: center;">
+                                        <i class="fas fa-tags" style="font-size: 48px; color: var(--medium-gray); margin-bottom: 20px;"></i>
+                                        <h4 style="color: var(--medium-gray); margin-bottom: 10px;">No Categories Found</h4>
+                                        <p style="color: var(--dark-gray); margin-bottom: 20px;">Get started by adding your first category</p>
+                                        <button type="button" class="btn" onclick="document.getElementById('categoryForm').scrollIntoView({behavior: 'smooth'})">
+                                            <i class="fas fa-plus me-1"></i>Add First Category
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                {% if categories %}
+                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                    <div style="color: var(--medium-gray);">
+                        Showing <strong>{{ categories|length }}</strong> categories
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Category Form -->
+        <div class="col-lg-4" style="padding: 15px;">
+            <div class="content-section" id="categoryForm">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fas fa-plus-circle me-2"></i>Add/Edit Category
+                    </div>
+                </div>
+                
+                <form method="post" style="margin-top: 20px;">
+                    {% csrf_token %}
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label for="{{ form.name.id_for_label }}" style="display: block; margin-bottom: 8px; color: var(--pure-white); font-weight: 500;">
+                            <i class="fas fa-tag me-1"></i>Category Name
+                        </label>
+                        <input type="text" 
+                               name="{{ form.name.name }}" 
+                               id="{{ form.name.id_for_label }}" 
+                               value="{{ form.name.value|default:'' }}"
+                               class="form-input"
+                               style="width: 100%; padding: 12px; background-color: var(--light-black); border: 1px solid var(--border-color); border-radius: 6px; color: var(--pure-white); font-size: 16px;"
+                               placeholder="Enter category name"
+                               required>
+                        {% if form.name.errors %}
+                        <div style="color: #dc3545; font-size: 14px; margin-top: 5px;">
+                            {% for error in form.name.errors %}
+                            <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div style="display: grid; gap: 10px;">
+                        <button type="submit" class="btn" style="background-color: #28a745; border-color: #28a745; width: 100%;">
+                            <i class="fas fa-save me-1"></i>Save Category
+                        </button>
+                        <a href="{% url 'category_page' %}" class="btn" style="width: 100%; text-align: center;">
+                            <i class="fas fa-times me-1"></i>Clear Form
+                        </a>
+                    </div>
+                </form>
+                
+                <!-- Tips Section -->
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                    <h4 style="color: var(--pure-white); margin-bottom: 15px;">
+                        <i class="fas fa-lightbulb me-2"></i>Tips
+                    </h4>
+                    <ul style="list-style: none; padding: 0; margin: 0;">
+                        <li style="padding: 8px 0; color: var(--medium-gray); display: flex; align-items: center;">
+                            <i class="fas fa-check-circle me-2" style="color: #28a745;"></i>
+                            Use clear, descriptive category names
+                        </li>
+                        <li style="padding: 8px 0; color: var(--medium-gray); display: flex; align-items: center;">
+                            <i class="fas fa-check-circle me-2" style="color: #28a745;"></i>
+                            Categories help organize products efficiently
+                        </li>
+                        <li style="padding: 8px 0; color: var(--medium-gray); display: flex; align-items: center;">
+                            <i class="fas fa-check-circle me-2" style="color: #28a745;"></i>
+                            Edit or delete categories as needed
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Additional styles for category page */
+    .form-input:focus {
+        outline: none;
+        border-color: #4ecdc4 !important;
+        box-shadow: 0 0 0 2px rgba(78, 205, 196, 0.2);
+    }
+    
+    .me-1 { margin-right: 0.25rem; }
+    .me-2 { margin-right: 0.5rem; }
+    
+    /* Make sure the content section doesn't have duplicate borders */
+    #dashboard.content-section {
+        border: none;
+        background-color: transparent;
+        padding: 0;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 992px) {
+        .col-lg-8, .col-lg-4 {
+            width: 100%;
+        }
+    }
+</style>
+
+<script>
+    // Highlight the current page in sidebar
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentUrl = window.location.pathname;
+        const navLinks = document.querySelectorAll('.nav-link');
+        
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === "{% url 'category_page' %}") {
+                link.classList.add('active');
+            }
+        });
+        
+        // Form submission feedback
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function() {
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
+                    submitBtn.disabled = true;
+                }
+            });
+        }
+    });
+</script>
+
+{% endblock %}

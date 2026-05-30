@@ -1,0 +1,1771 @@
+{% extends "user_nav.html" %}
+{% block content %}
+
+<style>
+    
+/* SAFE COLORS */
+:root {
+    --primary: #198754;
+    --dark: #111;
+    --light: #f8f9fa;
+    --border: #dee2e6;
+    --text: #333333; /* Default text color */
+}
+
+/* PAGE WRAPPER */
+.plot-wrap {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0 15px;
+}
+
+/* HEADER */
+.header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+/* BUTTONS */
+.btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    background: #157347;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(25, 135, 84, 0.2);
+}
+
+.btn-outline {
+    background: white;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+}
+
+.btn-outline:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+.btn-danger {
+    background: #dc3545;
+}
+
+.btn-danger:hover {
+    background: #bb2d3b;
+}
+
+.btn-warning {
+    background: #ffc107;
+    color: #212529;
+}
+
+.btn-warning:hover {
+    background: #ffca2c;
+}
+
+/* GRID */
+.plot-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+}
+
+/* CARD */
+.plot-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid var(--border);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.plot-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* IMAGE SECTION */
+.plot-image-container {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 15px;
+    height: 200px;
+    background: var(--light);
+    cursor: zoom-in;
+}
+
+.plot-main-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.plot-main-img:hover {
+    transform: scale(1.05);
+}
+
+.no-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #6c757d;
+    font-style: italic;
+    cursor: default;
+}
+
+.image-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    pointer-events: none;
+}
+
+/* THUMBNAILS */
+.thumbnail-container {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.thumbnail {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 2px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.thumbnail:hover {
+    border-color: var(--primary);
+    transform: scale(1.1);
+}
+
+.thumbnail.active {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(25, 135, 84, 0.2);
+}
+
+/* BADGES */
+.status-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.status-available { background: #d1e7dd; color: #0f5132; }
+.status-sold { background: #f8d7da; color: #842029; }
+.status-reserved { background: #fff3cd; color: #664d03; }
+
+/* PLOT DETAILS */
+.plot-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--dark);
+    margin: 10px 0;
+    line-height: 1.3;
+}
+
+.plot-price {
+    color: var(--primary);
+    font-size: 20px;
+    font-weight: 700;
+    margin: 10px 0;
+}
+
+.plot-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.feature-tag {
+    background: var(--light);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* ACTION BUTTONS */
+.plot-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 15px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+}
+
+/* MODAL */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-content {
+    background: white;
+    width: 100%;
+    max-width: 600px;
+    border-radius: 12px;
+    overflow: hidden;
+    animation: modalSlideIn 0.3s ease;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes modalSlideIn {
+    from { opacity: 0; transform: translateY(-30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+    background: var(--primary);
+    color: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.modal-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+    color: white;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-body {
+    padding: 25px;
+    overflow-y: auto;
+    color: var(--text); /* Fix: Ensure text is dark in modal body */
+}
+
+/* FORM STYLES */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--text); /* Fix: Explicitly set label color */
+}
+
+.form-label.required::after {
+    content: " *";
+    color: #dc3545;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.2s ease;
+    color: var(--text); /* Fix: Input text color */
+    background-color: white;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.1);
+}
+
+/* FIX: Form Row Grid */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+/* SELECT DROPDOWN STYLES */
+select.form-control {
+    color: var(--text); /* Fix: Select text color */
+    background-color: white;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px;
+}
+
+/* TEXTAREA */
+textarea.form-control {
+    min-height: 100px;
+    resize: vertical;
+    color: var(--text);
+}
+
+/* CHECKBOXES */
+.checkbox-group {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    color: var(--text);
+}
+
+.checkbox-input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+}
+
+/* PLACEHOLDER COLOR */
+::placeholder {
+    color: #6c757d;
+    opacity: 0.7;
+}
+
+/* IMAGE UPLOAD */
+.image-upload-area {
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--light);
+}
+
+.image-upload-area:hover {
+    border-color: var(--primary);
+    background: #f8fff9;
+}
+
+.upload-icon {
+    font-size: 40px;
+    color: var(--primary);
+    margin-bottom: 10px;
+}
+
+/* CURRENT IMAGES */
+.current-images { margin-top: 25px; }
+
+.image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.image-item {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.image-item img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+}
+
+.delete-image {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(220, 53, 69, 0.9);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+/* ALERTS */
+.alert {
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.alert-success { background: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
+.alert-error { background: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
+
+/* UTILITIES */
+.text-muted { color: #6c757d !important; }
+.font-sm { font-size: 13px; }
+.mt-3 { margin-top: 15px; }
+.mb-3 { margin-bottom: 15px; }
+.text-center { text-align: center; }
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+/* INTEREST SECTION */
+.interest-section {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border);
+}
+
+.interest-btn {
+    background: #0d6efd;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    width: 100%;
+    justify-content: center;
+}
+
+.interest-btn:hover {
+    background: #0b5ed7;
+    transform: translateY(-2px);
+}
+
+.interest-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    color: #6c757d;
+    margin-top: 10px;
+}
+
+/* INTEREST MODAL LIST */
+.interest-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.interest-item {
+    padding: 15px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    background: white;
+}
+
+.interest-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.user-info h5 {
+    margin: 0;
+    font-size: 16px;
+    color: var(--dark);
+}
+
+.user-info p {
+    margin: 5px 0 0 0;
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.interest-message {
+    background: var(--light);
+    padding: 12px;
+    border-radius: 6px;
+    margin: 10px 0;
+    font-style: italic;
+    color: #495057;
+}
+
+.interest-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.interest-status {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-pending { background: #fff3cd; color: #856404; }
+.status-contacted { background: #d1e7dd; color: #0f5132; }
+.status-rejected { background: #f8d7da; color: #842029; }
+
+/* WISHLIST BUTTON */
+.wishlist-btn {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: white;
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    z-index: 10;
+    transition: all 0.3s ease;
+}
+
+.wishlist-btn:hover { transform: scale(1.1); }
+.wishlist-btn.active { background: #dc3545; color: white; }
+
+/* NOTIFICATION BADGE */
+.notification-badge { position: relative; display: inline-block; }
+
+.badge-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #dc3545;
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+}
+
+/* TOAST NOTIFICATION */
+.toast-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border-radius: 8px;
+    padding: 15px 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: slideIn 0.3s ease;
+    max-width: 350px;
+}
+
+.toast-success { border-left: 4px solid #198754; }
+.toast-error { border-left: 4px solid #dc3545; }
+.toast-info { border-left: 4px solid #0d6efd; }
+
+.toast-content { flex: 1; }
+.toast-title { font-weight: 600; margin-bottom: 5px; color: var(--dark); }
+.toast-message { font-size: 14px; color: #6c757d; }
+.toast-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #6c757d; }
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* ========================================
+   LIGHTBOX (FULLSCREEN IMAGE VIEWER)
+   ======================================== */
+.lightbox-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.92);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.lightbox-overlay.active {
+    display: flex;
+    opacity: 1;
+}
+
+.lightbox-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 85vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lightbox-image {
+    max-width: 100%;
+    max-height: 85vh;
+    object-fit: contain;
+    border-radius: 4px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    transition: transform 0.3s ease;
+}
+
+.lightbox-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: white;
+    font-size: 32px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    z-index: 2001;
+    transition: transform 0.2s;
+    opacity: 0.8;
+}
+
+.lightbox-close:hover {
+    transform: rotate(90deg);
+    opacity: 1;
+}
+
+.lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: none;
+    padding: 15px;
+    cursor: pointer;
+    font-size: 24px;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.lightbox-nav:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.lightbox-prev { left: 20px; }
+.lightbox-next { right: 20px; }
+
+.lightbox-caption {
+    color: white;
+    margin-top: 15px;
+    text-align: center;
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.lightbox-thumbnails {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    max-width: 90vw;
+    overflow-x: auto;
+    padding: 10px 0;
+    justify-content: center;
+}
+
+.lightbox-thumb {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0.6;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.lightbox-thumb:hover { opacity: 1; }
+.lightbox-thumb.active { 
+    opacity: 1; 
+    border-color: var(--primary); 
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .plot-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+    
+    .header-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .modal-content {
+        margin: 10px;
+    }
+    
+    .plot-actions {
+        flex-wrap: wrap;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .lightbox-nav {
+        padding: 10px;
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+    .lightbox-prev { left: 5px; }
+    .lightbox-next { right: 5px; }
+}
+</style>
+
+<div class="plot-wrap">
+
+<!-- HEADER -->
+<div class="header-bar">
+    <div>
+        <h2 style="margin: 0;">My Plots</h2>
+        <p class="text-muted" style="margin: 5px 0 0 0;">Manage your property listings</p>
+    </div>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="btn btn-outline notification-badge" onclick="openInterestRequestsModal()">
+            <i class="fas fa-bell"></i> Interest Requests
+            {% if total_pending_interests > 0 %}
+                <span class="badge-count">{{ total_pending_interests }}</span>
+            {% endif %}
+        </button>
+        <button class="btn" onclick="openPlotModal('add')">
+            <i class="fas fa-plus"></i> Add New Plot
+        </button>
+    </div>
+</div>
+
+<!-- SUCCESS MESSAGES -->
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            <i class="fas fa-check-circle"></i> {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<!-- PLOT MODAL (Add/Edit) -->
+<div class="modal-overlay" id="plotModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modalTitle">Add New Plot</h3>
+            <button class="modal-close" onclick="closePlotModal()">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+            <form method="POST" enctype="multipart/form-data" id="plotForm" action="{% url 'plot_manage' %}">
+                {% csrf_token %}
+                <input type="hidden" name="plot_id" id="plotId" value="">
+                
+                <div class="form-group">
+                    <label class="form-label required">Plot Title</label>
+                    <input type="text" name="title" id="plotTitle" class="form-control" 
+                           required placeholder="e.g., Beautiful Residential Plot">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label required">Address</label>
+                    <input type="text" name="address" id="plotAddress" class="form-control" 
+                           required placeholder="Full address">
+                </div>
+                
+                <!-- Fixed Form Row -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label required">Area (sq ft)</label>
+                        <input type="number" name="area" id="plotArea" class="form-control" 
+                               required min="1" placeholder="e.g., 1000">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label required">Price (₹)</label>
+                        <input type="number" name="price" id="plotPrice" class="form-control" 
+                               required min="1" step="0.01" placeholder="e.g., 500000">
+                    </div>
+                </div>
+
+                <!-- Status Field (Added) -->
+                <div class="form-group">
+                    <label class="form-label">Availability Status</label>
+                    <select name="availability_status" id="plotStatus" class="form-control">
+                        <option value="Available">Available</option>
+                        <option value="Sold">Sold</option>
+                        <option value="Reserved">Reserved</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Plot Type</label>
+                    <select name="plot_type" id="plotType" class="form-control">
+                        <option value="">Select Type</option>
+                        {% for value, label in plot_type_choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea name="description" id="plotDescription" class="form-control" rows="4" 
+                              placeholder="Describe the plot features, location advantages, etc."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Features</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="water" id="plotWater" class="checkbox-input" value="true">
+                            <span>Water Supply</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="electricity" id="plotElectricity" class="checkbox-input" value="true">
+                            <span>Electricity</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="gated_community" id="plotGated" class="checkbox-input" value="true">
+                            <span>Gated Community</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Upload Images</label>
+                    <div class="image-upload-area" onclick="document.getElementById('images').click()">
+                        <div class="upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <p class="upload-text">Click to upload or drag and drop</p>
+                        <p class="font-sm text-muted">PNG, JPG, GIF up to 5MB each</p>
+                    </div>
+                    <input type="file" name="images" id="images" multiple 
+                           accept="image/*" style="display: none;" onchange="previewImages(this)">
+                    <div id="imagePreview" style="margin-top: 10px;"></div>
+                </div>
+                
+                <div id="currentImagesSection" style="display: none;">
+                    <div class="current-images">
+                        <label class="form-label">Current Images</label>
+                        <div class="image-grid" id="currentImagesGrid"></div>
+                    </div>
+                </div>
+                
+                <div class="mt-3" style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closePlotModal()">Cancel</button>
+                    <button type="submit" class="btn" id="submitBtn">
+                        <i class="fas fa-save"></i> Save Plot
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ADD PHOTOS MODAL -->
+<div class="modal-overlay" id="addPhotosModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Add More Photos</h3>
+            <button class="modal-close" onclick="closeAddPhotosModal()">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+            <form method="POST" enctype="multipart/form-data" id="addPhotosForm" action="{% url 'plot_add_images' %}">
+                {% csrf_token %}
+                <input type="hidden" name="plot_id" id="addPhotosPlotId">
+                
+                <div class="form-group">
+                    <div class="image-upload-area" onclick="document.getElementById('moreImages').click()">
+                        <div class="upload-icon">
+                            <i class="fas fa-images"></i>
+                        </div>
+                        <p class="upload-text">Select images to add</p>
+                        <p class="font-sm text-muted">You can select multiple images</p>
+                    </div>
+                    <input type="file" name="images" id="moreImages" multiple 
+                           accept="image/*" style="display: none;" onchange="previewMoreImages(this)">
+                    <div id="moreImagesPreview" style="margin-top: 15px; display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px;"></div>
+                </div>
+                
+                <div class="mt-3" style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeAddPhotosModal()">Cancel</button>
+                    <button type="submit" class="btn">
+                        <i class="fas fa-upload"></i> Upload Photos
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- INTEREST REQUESTS MODAL -->
+<div class="modal-overlay" id="interestRequestsModal">
+    <div class="modal-content interest-modal">
+        <div class="modal-header">
+            <h3 class="modal-title">Interest Requests</h3>
+            <button class="modal-close" onclick="closeInterestRequestsModal()">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+            {% if all_interests %}
+                <ul class="interest-list">
+                {% for interest in all_interests %}
+                    <li class="interest-item" id="interest-item-{{ interest.id }}">
+                        <div class="interest-user">
+                            <div class="user-avatar">
+                                {{ interest.user.name|first|upper }}
+                            </div>
+                            <div class="user-info">
+                                <h5>{{ interest.user.name }}</h5>
+                                <p>{{ interest.user.email }} • {{ interest.created_at|date:"d M Y, h:i A" }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="interest-message">
+                            "{{ interest.message|default:"Interested in this plot" }}"
+                        </div>
+                        
+                        <div class="interest-actions">
+                            <button class="btn btn-sm btn-outline" onclick="respondToInterest('{{ interest.id }}', '{{ interest.user.name }}', 'contacted')">
+                                <i class="fas fa-check"></i> Mark Contacted
+                            </button>
+                            <button class="btn btn-sm btn-outline" onclick="respondToInterest('{{ interest.id }}', '{{ interest.user.name }}', 'rejected')">
+                                <i class="fas fa-times"></i> Not Interested
+                            </button>
+                            <button class="btn btn-sm btn-primary" onclick="sendMessageToUser('{{ interest.user.id }}', '{{ interest.plot.id }}')">
+                                <i class="fas fa-comment"></i> Send Message
+                            </button>
+                        </div>
+                        
+                        <div style="margin-top: 10px;">
+                            <span class="interest-status status-{{ interest.status|default:'pending' }}">
+                                {{ interest.get_status_display|default:'Pending' }}
+                            </span>
+                        </div>
+                    </li>
+                {% endfor %}
+                </ul>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-bell-slash"></i>
+                    </div>
+                    <h3>No Interest Requests</h3>
+                    <p class="text-muted">When someone shows interest in your plots, they'll appear here</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- RESPONSE MODAL -->
+<div class="modal-overlay" id="responseModal">
+    <div class="modal-content response-modal">
+        <div class="modal-header">
+            <h3 class="modal-title" id="responseModalTitle">Respond to Interest</h3>
+            <button class="modal-close" onclick="closeResponseModal()">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+            <form method="POST" id="responseForm" action="{% url 'plot_interest_respond' %}">
+                {% csrf_token %}
+                <input type="hidden" name="interest_id" id="responseInterestId">
+                <input type="hidden" name="status" id="responseStatus">
+                
+                <p id="responseUserName" style="color: var(--text);"></p>
+                
+                <div class="response-options">
+                    <div class="response-option" onclick="selectResponseOption('contacted')" id="opt-contacted">
+                        <i class="fas fa-check-circle"></i>
+                        <p style="color: var(--text);">Contacted</p>
+                    </div>
+                    <div class="response-option" onclick="selectResponseOption('rejected')" id="opt-rejected">
+                        <i class="fas fa-times-circle"></i>
+                        <p style="color: var(--text);">Not Interested</p>
+                    </div>
+                </div>
+                
+                <textarea name="response_message" id="responseMessage" class="form-control" placeholder="Add a response message (optional)"></textarea>
+                
+                <div class="mt-3" style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeResponseModal()">Cancel</button>
+                    <button type="submit" class="btn" id="responseSubmitBtn">
+                        <i class="fas fa-paper-plane"></i> Send Response
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- CHAT MODAL -->
+<div class="modal-overlay" id="chatModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title" id="chatModalTitle">Send Message</h3>
+            <button class="modal-close" onclick="closeChatModal()">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+            <form method="POST" id="chatForm" action="{% url 'send_message_to_user' %}">
+                {% csrf_token %}
+                <input type="hidden" name="user_id" id="chatUserId">
+                <input type="hidden" name="plot_id" id="chatPlotId">
+                
+                <div class="form-group">
+                    <label class="form-label">Your Message</label>
+                    <textarea name="message" id="chatMessage" class="form-control" rows="5" 
+                              placeholder="Type your message here..." required></textarea>
+                </div>
+                
+                <div class="mt-3" style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeChatModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Send Message
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- LIGHTBOX STRUCTURE -->
+<div class="lightbox-overlay" id="lightbox">
+    <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+    
+    <button class="lightbox-nav lightbox-prev" onclick="changeLightboxImage(-1)">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+    
+    <div class="lightbox-content">
+        <img src="" class="lightbox-image" id="lightbox-img" alt="Plot Image">
+    </div>
+    
+    <button class="lightbox-nav lightbox-next" onclick="changeLightboxImage(1)">
+        <i class="fas fa-chevron-right"></i>
+    </button>
+    
+    <div class="lightbox-caption" id="lightbox-caption"></div>
+    
+    <div class="lightbox-thumbnails" id="lightbox-thumbs"></div>
+</div>
+
+<!-- TOAST NOTIFICATION -->
+<div id="toast" style="display: none;"></div>
+
+<!-- PLOTS GRID -->
+{% if plots %}
+<div class="plot-grid">
+    {% for p in plots %}
+    <div class="plot-card" id="plot-card-{{ p.id }}">
+        <!-- WISHLIST BUTTON -->
+        <button class="wishlist-btn {% if p.is_wishlisted %}active{% endif %}" 
+                onclick="toggleWishlist('{{ p.id }}', this)"
+                title="{% if p.is_wishlisted %}Remove from wishlist{% else %}Add to wishlist{% endif %}">
+            <i class="{% if p.is_wishlisted %}fas{% else %}far{% endif %} fa-heart"></i>
+        </button>
+        
+        <!-- IMAGE SECTION -->
+        <div class="plot-image-container">
+            {% with first_image=p.images.first %}
+                {% if first_image %}
+                    <img src="{{ first_image.image.url }}" 
+                         class="plot-main-img" 
+                         alt="{{ p.title }}"
+                         id="main-img-{{ p.id }}"
+                         onclick="openLightbox({{ p.id }}, 0)">
+                {% else %}
+                    <div class="no-image">
+                        <i class="fas fa-image"></i> No Image
+                    </div>
+                {% endif %}
+            {% endwith %}
+            
+            {% if p.images.count > 0 %}
+                <div class="image-badge">
+                    <i class="fas fa-camera"></i> {{ p.images.count }}
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- THUMBNAILS -->
+        {% if p.images.count > 1 %}
+        <div class="thumbnail-container">
+            {% for img in p.images.all %}
+                <img src="{{ img.image.url }}" 
+                     class="thumbnail {% if forloop.first %}active{% endif %}" 
+                     alt="Thumbnail {{ forloop.counter }}"
+                     onclick="changeMainImage('{{ p.id }}', '{{ img.image.url }}', this, {{ forloop.counter0 }})">
+            {% endfor %}
+        </div>
+        {% elif p.images.count == 1 %}
+             <div class="thumbnail-container">
+                {% for img in p.images.all %}
+                    <img src="{{ img.image.url }}" 
+                         class="thumbnail active" 
+                         alt="Thumbnail"
+                         onclick="openLightbox({{ p.id }}, 0)">
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        <!-- STATUS BADGE -->
+        {% if p.availability_status == 'Available' %}
+            <span class="status-badge status-available">
+                <i class="fas fa-check-circle"></i> Available
+            </span>
+        {% elif p.availability_status == 'Sold' %}
+            <span class="status-badge status-sold">
+                <i class="fas fa-times-circle"></i> Sold
+            </span>
+        {% elif p.availability_status == 'Reserved' %}
+            <span class="status-badge status-reserved">
+                <i class="fas fa-clock"></i> Reserved
+            </span>
+        {% endif %}
+        
+        <!-- PLOT DETAILS -->
+        <h3 class="plot-title">{{ p.title }}</h3>
+        <p class="font-sm text-muted" style="margin: 5px 0;">
+            <i class="fas fa-map-marker-alt"></i> {{ p.address|truncatechars:30 }}
+        </p>
+        
+        <div class="plot-price">₹ {{ p.price|floatformat:0 }}</div>
+        
+        <div style="display: flex; gap: 15px; margin: 10px 0;">
+            <span class="font-sm" style="
+    color: black;
+">
+                <i class="fas fa-vector-square"></i> {{ p.area }} sq ft
+            </span>
+            {% if p.plot_type %}
+            <span class="font-sm" style="
+    color: black;
+">
+                <i class="fas fa-tag"></i> {{ p.get_plot_type_display }}
+            </span>
+            {% endif %}
+        </div>
+        
+        <!-- FEATURES -->
+        <div class="plot-features">
+            {% if p.water %}
+                <span class="feature-tag">
+                    <i class="fas fa-tint"></i> Water
+                </span>
+            {% endif %}
+            {% if p.electricity %}
+                <span class="feature-tag">
+                    <i class="fas fa-bolt"></i> Electricity
+                </span>
+            {% endif %}
+            {% if p.gated_community %}
+                <span class="feature-tag">
+                    <i class="fas fa-shield-alt"></i> Gated
+                </span>
+            {% endif %}
+        </div>
+        
+        <!-- INTEREST SECTION -->
+        <div class="interest-section">
+            <button class="interest-btn" onclick="viewInterestDetails('{{ p.id }}')">
+                <i class="fas fa-users"></i> View Interest ({{ p.interest_count }})
+                {% if p.pending_interest_count > 0 %}
+                    <span class="badge-count" style="position: relative; top: 0; right: 0;">{{ p.pending_interest_count }}</span>
+                {% endif %}
+            </button>
+            
+            {% if p.interest_count > 0 %}
+            <div class="interest-count">
+                <i class="fas fa-clock"></i> 
+                {{ p.pending_interest_count }} pending, 
+                {{ p.contacted_interest_count }} contacted
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- ACTIONS -->
+        <div class="plot-actions">
+            <button class="btn btn-sm btn-outline" onclick="editPlot(
+                '{{ p.id }}',
+                '{{ p.title|escapejs }}',
+                '{{ p.address|escapejs }}',
+                '{{ p.area }}',
+                '{{ p.price }}',
+                '{{ p.plot_type|default:'' }}',
+                `{{ p.description|escapejs }}`,
+                {{ p.water|yesno:'true,false' }},
+                {{ p.electricity|yesno:'true,false' }},
+                {{ p.gated_community|yesno:'true,false' }},
+                '{{ p.availability_status }}'
+            )">
+                <i class="fas fa-edit"></i> Edit
+            </button>
+            
+            <button class="btn btn-sm btn-warning" onclick="openAddPhotosModal('{{ p.id }}')">
+                <i class="fas fa-plus"></i> Photos
+            </button>
+            
+            <a href="{% url 'plot_delete' p.id %}" 
+               class="btn btn-sm btn-danger"
+               onclick="return confirm('Are you sure you want to delete this plot? All images and interest records will be deleted too.')">
+                <i class="fas fa-trash"></i> Delete
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<!-- EMPTY STATE -->
+<div class="empty-state">
+    <div class="empty-icon">
+        <i class="fas fa-landmark"></i>
+    </div>
+    <h3>No Plots Added Yet</h3>
+    <p class="text-muted">Start by adding your first plot for sale</p>
+    <button class="btn mt-3" onclick="openPlotModal('add')">
+        <i class="fas fa-plus"></i> Add Your First Plot
+    </button>
+</div>
+{% endif %}
+
+</div>
+
+<script>
+// Global variables
+let currentInterestId = null;
+let currentLightboxPlot = null;
+let currentLightboxIndex = 0;
+let plotImagesData = {}; // Store image URLs by plot ID
+
+// Store image data for Lightbox
+{% for p in plots %}
+    plotImagesData['{{ p.id }}'] = [
+        {% for img in p.images.all %}
+            '{{ img.image.url }}',
+        {% endfor %}
+    ];
+{% endfor %}
+
+// Toast notification function
+function showToast(title, message, type = 'success') {
+    const toast = document.getElementById('toast');
+    const icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle');
+    
+    toast.innerHTML = `
+        <div class="toast-notification toast-${type}">
+            <div class="toast-icon">
+                <i class="fas ${icon}"></i>
+            </div>
+            <div class="toast-content">
+                <div class="toast-title">${title}</div>
+                <div class="toast-message">${message}</div>
+            </div>
+            <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+        </div>
+    `;
+    
+    toast.style.display = 'block';
+    
+    setTimeout(() => {
+        if (toast.firstChild) {
+            toast.firstChild.remove();
+        }
+    }, 5000);
+}
+
+// =============================================
+// LIGHTBOX FUNCTIONS
+// =============================================
+
+function openLightbox(plotId, index) {
+    const images = plotImagesData[plotId];
+    if (!images || images.length === 0) return;
+
+    currentLightboxPlot = plotId;
+    currentLightboxIndex = index;
+
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const caption = document.getElementById('lightbox-caption');
+    const thumbsContainer = document.getElementById('lightbox-thumbs');
+
+    // Set main image
+    lightboxImg.src = images[index];
+    caption.innerText = `Image ${index + 1} of ${images.length}`;
+
+    // Generate thumbnails
+    thumbsContainer.innerHTML = '';
+    images.forEach((url, i) => {
+        const thumb = document.createElement('img');
+        thumb.src = url;
+        thumb.className = 'lightbox-thumb' + (i === index ? ' active' : '');
+        thumb.onclick = () => setLightboxImage(i);
+        thumbsContainer.appendChild(thumb);
+    });
+
+    lightbox.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+    const lightbox = document.getElementById('lightbox');
+    lightbox.classList.remove('active');
+    document.body.style.overflow = 'auto';
+    currentLightboxPlot = null;
+}
+
+function setLightboxImage(index) {
+    const images = plotImagesData[currentLightboxPlot];
+    if (!images) return;
+
+    currentLightboxIndex = index;
+    document.getElementById('lightbox-img').src = images[index];
+    document.getElementById('lightbox-caption').innerText = `Image ${index + 1} of ${images.length}`;
+
+    // Update thumbnail active state
+    const thumbs = document.querySelectorAll('.lightbox-thumb');
+    thumbs.forEach((t, i) => {
+        if (i === index) t.classList.add('active');
+        else t.classList.remove('active');
+    });
+}
+
+function changeLightboxImage(direction) {
+    const images = plotImagesData[currentLightboxPlot];
+    if (!images) return;
+
+    let newIndex = currentLightboxIndex + direction;
+
+    if (newIndex >= images.length) newIndex = 0;
+    if (newIndex < 0) newIndex = images.length - 1;
+
+    setLightboxImage(newIndex);
+}
+
+// Keyboard navigation for Lightbox
+document.addEventListener('keydown', function(e) {
+    if (!document.getElementById('lightbox').classList.contains('active')) return;
+    
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowRight') changeLightboxImage(1);
+    if (e.key === 'ArrowLeft') changeLightboxImage(-1);
+});
+
+// =============================================
+// OTHER FUNCTIONS
+// =============================================
+
+function viewInterestDetails(plotId) {
+    openInterestRequestsModal();
+}
+
+function respondToInterest(interestId, userName, status) {
+    currentInterestId = interestId;
+    document.getElementById('responseInterestId').value = interestId;
+    document.getElementById('responseStatus').value = status;
+    document.getElementById('responseUserName').innerHTML = `Responding to <strong>${userName}</strong>`;
+    document.getElementById('responseModalTitle').innerHTML = `Respond to ${userName}`;
+    
+    document.querySelectorAll('.response-option').forEach(opt => opt.classList.remove('selected'));
+    const opt = document.getElementById(`opt-${status}`);
+    if(opt) opt.classList.add('selected');
+    
+    document.getElementById('responseModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function selectResponseOption(status) {
+    document.getElementById('responseStatus').value = status;
+    document.querySelectorAll('.response-option').forEach(opt => opt.classList.remove('selected'));
+    const opt = document.getElementById(`opt-${status}`);
+    if(opt) opt.classList.add('selected');
+}
+
+function closeResponseModal() {
+    document.getElementById('responseModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+    document.getElementById('responseForm').reset();
+    currentInterestId = null;
+}
+
+function toggleWishlist(plotId, button) {
+    fetch(`/plot/${plotId}/wishlist/toggle/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'added') {
+            button.classList.add('active');
+            button.querySelector('i').classList.remove('far');
+            button.querySelector('i').classList.add('fas');
+            showToast('Success', 'Plot added to wishlist', 'success');
+        } else if (data.status === 'removed') {
+            button.classList.remove('active');
+            button.querySelector('i').classList.remove('fas');
+            button.querySelector('i').classList.add('far');
+            showToast('Success', 'Plot removed from wishlist', 'success');
+        }
+    })
+    .catch(error => {
+        showToast('Error', 'Failed to update wishlist', 'error');
+    });
+}
+
+function sendMessageToUser(userId, plotId) {
+    document.getElementById('chatUserId').value = userId;
+    document.getElementById('chatPlotId').value = plotId;
+    document.getElementById('chatModalTitle').innerHTML = 'Send Message';
+    document.getElementById('chatModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeChatModal() {
+    document.getElementById('chatModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+    document.getElementById('chatForm').reset();
+}
+
+function openPlotModal(mode = 'add', plotId = null) {
+    if (mode === 'add') {
+        document.getElementById('modalTitle').textContent = 'Add New Plot';
+        document.getElementById('plotId').value = '';
+        document.getElementById('plotForm').reset();
+        document.getElementById('plotForm').action = "{% url 'plot_manage' %}";
+        document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Save Plot';
+        document.getElementById('currentImagesSection').style.display = 'none';
+        document.getElementById('imagePreview').innerHTML = '';
+        
+        document.getElementById('plotWater').checked = false;
+        document.getElementById('plotElectricity').checked = false;
+        document.getElementById('plotGated').checked = false;
+        document.getElementById('plotType').selectedIndex = 0;
+        
+        // Reset Status to default
+        document.getElementById('plotStatus').value = 'Available';
+    }
+    
+    document.getElementById('plotModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closePlotModal() {
+    document.getElementById('plotModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+function editPlot(plotId, title, address, area, price, plotType, description, water, electricity, gated, availability_status) {
+    document.getElementById('modalTitle').textContent = 'Edit Plot: ' + title;
+    document.getElementById('plotId').value = plotId;
+    
+    document.getElementById('plotTitle').value = title;
+    document.getElementById('plotAddress').value = address;
+    document.getElementById('plotArea').value = area;
+    document.getElementById('plotPrice').value = price;
+    
+    const plotTypeSelect = document.getElementById('plotType');
+    if (plotType) {
+        for (let i = 0; i < plotTypeSelect.options.length; i++) {
+            if (plotTypeSelect.options[i].value === plotType) {
+                plotTypeSelect.selectedIndex = i;
+                break;
+            }
+        }
+    } else {
+        plotTypeSelect.selectedIndex = 0;
+    }
+    
+    document.getElementById('plotDescription').value = description || '';
+    
+    document.getElementById('plotWater').checked = (water === true || water === 'true');
+    document.getElementById('plotElectricity').checked = (electricity === true || electricity === 'true');
+    document.getElementById('plotGated').checked = (gated === true || gated === 'true');
+    
+    // Set Status Dropdown
+    const statusSelect = document.getElementById('plotStatus');
+    if (availability_status) {
+        for (let i = 0; i < statusSelect.options.length; i++) {
+            if (statusSelect.options[i].value === availability_status) {
+                statusSelect.selectedIndex = i;
+                break;
+            }
+        }
+    }
+    
+    document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Update Plot';
+    document.getElementById('plotForm').action = "{% url 'plot_manage' %}" + plotId + "/";
+    
+    document.getElementById('plotModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function openAddPhotosModal(plotId) {
+    document.getElementById('addPhotosPlotId').value = plotId;
+    document.getElementById('addPhotosModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeAddPhotosModal() {
+    document.getElementById('addPhotosModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+    document.getElementById('moreImages').value = '';
+    document.getElementById('moreImagesPreview').innerHTML = '';
+}
+
+function openInterestRequestsModal() {
+    document.getElementById('interestRequestsModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeInterestRequestsModal() {
+    document.getElementById('interestRequestsModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+function previewImages(input) {
+    const preview = document.getElementById('imagePreview');
+    preview.innerHTML = '';
+    
+    if (input.files) {
+        Array.from(input.files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.cssText = 'width: 100px; height: 100px; object-fit: cover; margin: 5px; border-radius: 8px; border: 2px solid #198754;';
+                preview.appendChild(img);
+            }
+            reader.readAsDataURL(file);
+        });
+    }
+}
+
+function previewMoreImages(input) {
+    const preview = document.getElementById('moreImagesPreview');
+    preview.innerHTML = '';
+    
+    if (input.files && input.files.length > 0) {
+        Array.from(input.files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgContainer = document.createElement('div');
+                imgContainer.style.position = 'relative';
+                
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.cssText = 'width: 100%; height: 80px; object-fit: cover; border-radius: 6px; border: 2px solid #198754;';
+                
+                imgContainer.appendChild(img);
+                preview.appendChild(imgContainer);
+            }
+            reader.readAsDataURL(file);
+        });
+    }
+}
+
+// Change main image in card (and open lightbox if needed)
+function changeMainImage(plotId, imageUrl, thumbnail, index = 0) {
+    // Update main image
+    const mainImg = document.getElementById('main-img-' + plotId);
+    if (mainImg) {
+        mainImg.src = imageUrl;
+        // Update onclick handler for the main image to open lightbox at correct index
+        mainImg.onclick = function() { openLightbox(plotId, index); };
+    }
+    
+    // Update active thumbnail state
+    const thumbnails = thumbnail.parentElement.querySelectorAll('.thumbnail');
+    thumbnails.forEach(t => t.classList.remove('active'));
+    thumbnail.classList.add('active');
+}
+
+// Modal click outside handlers
+window.onclick = function(event) {
+    const modals = ['plotModal', 'addPhotosModal', 'interestRequestsModal', 'responseModal', 'chatModal'];
+    modals.forEach(id => {
+        const modal = document.getElementById(id);
+        if (event.target == modal) {
+            // Close functions mapping
+            if(id === 'plotModal') closePlotModal();
+            else if(id === 'addPhotosModal') closeAddPhotosModal();
+            else if(id === 'interestRequestsModal') closeInterestRequestsModal();
+            else if(id === 'responseModal') closeResponseModal();
+            else if(id === 'chatModal') closeChatModal();
+        }
+    });
+
+    // Lightbox close on background click
+    if (event.target.id === 'lightbox') {
+        closeLightbox();
+    }
+}
+
+// Form validation
+document.getElementById('plotForm')?.addEventListener('submit', function(e) {
+    const title = this.querySelector('[name="title"]').value.trim();
+    const address = this.querySelector('[name="address"]').value.trim();
+    const area = this.querySelector('[name="area"]').value;
+    const price = this.querySelector('[name="price"]').value;
+    
+    if (!title || !address || !area || !price) {
+        e.preventDefault();
+        showToast('Error', 'Please fill in all required fields', 'error');
+        return false;
+    }
+    
+    if (parseFloat(price) <= 0 || parseInt(area) <= 0) {
+        e.preventDefault();
+        showToast('Error', 'Area and Price must be greater than 0', 'error');
+        return false;
+    }
+});
+
+// Auto-open edit modal if plot is passed from Django
+{% if plot %}
+    document.addEventListener('DOMContentLoaded', function() {
+        editPlot(
+            '{{ plot.id }}',
+            '{{ plot.title|escapejs }}',
+            '{{ plot.address|escapejs }}',
+            '{{ plot.area }}',
+            '{{ plot.price }}',
+            '{{ plot.plot_type|default:'' }}',
+            `{{ plot.description|escapejs }}`,
+            {{ plot.water|yesno:'true,false' }},
+            {{ plot.electricity|yesno:'true,false' }},
+            {{ plot.gated_community|yesno:'true,false' }},
+            '{{ plot.availability_status }}'
+        );
+        
+        const editingCard = document.getElementById('plot-card-{{ plot.id }}');
+        if (editingCard) {
+            editingCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+{% endif %}
+
+</script>
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+{% endblock %}

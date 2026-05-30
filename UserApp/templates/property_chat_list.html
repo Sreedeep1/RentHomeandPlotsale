@@ -1,0 +1,421 @@
+{% extends "user_nav.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header Section -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <div class="mb-3 mb-md-0">
+            <h2 class="fw-bold mb-1 text-dark">
+                <i class="fas fa-comments me-2 text-success"></i>
+                Chat Enquiries
+            </h2>
+            <p class="text-secondary">
+                <i class="fas fa-home me-1"></i> For: <strong class="text-dark">{{ property.title }}</strong>
+            </p>
+        </div>
+        <a href="{% url 'property_list' %}" class="btn btn-outline-dark rounded-pill px-4">
+            <i class="fas fa-arrow-left me-2"></i>Back to Properties
+        </a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box bg-primary bg-opacity-10 rounded-3 p-3 me-3">
+                            <i class="fas fa-comment-dots text-primary fa-2x"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-secondary mb-1 fw-bold text-uppercase small">Total Enquiries</h6>
+                            <h3 class="fw-bold mb-0 text-dark">{{ room_list|length }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box bg-success bg-opacity-10 rounded-3 p-3 me-3">
+                            <i class="fas fa-user-check text-success fa-2x"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-secondary mb-1 fw-bold text-uppercase small">Active Chats</h6>
+                            <h3 class="fw-bold mb-0 text-dark">{{ room_list|length }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box bg-warning bg-opacity-10 rounded-3 p-3 me-3">
+                            <i class="fas fa-clock text-warning fa-2x"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-secondary mb-1 fw-bold text-uppercase small">Last Activity</h6>
+                            <h6 class="fw-bold mb-0 text-dark">Just now</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white">
+        <div class="card-body">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0 rounded-start-pill text-secondary">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" 
+                               class="form-control bg-light border-0 rounded-end-pill text-dark fw-medium" 
+                               placeholder="Search by customer name..."
+                               id="searchInput"
+                               onkeyup="filterChats()">
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-outline-secondary rounded-pill px-4 active-sort-btn" onclick="sortBy('recent')">
+                            <i class="fas fa-clock me-2"></i>Recent
+                        </button>
+                        <button class="btn btn-outline-secondary rounded-pill px-4" onclick="sortBy('name')">
+                            <i class="fas fa-sort-alpha-down me-2"></i>Name
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat List -->
+    {% if room_list %}
+    <div class="chat-list" id="chatList">
+        {% for item in room_list %}
+        <!-- Chat Item Card -->
+        <div class="chat-item card border-0 shadow-sm rounded-4 mb-3 hover-effect bg-white" 
+             data-customer-name="{{ item.customer.name|lower }}"
+             data-last-message="{{ item.last_message|default:''|lower }}"
+             data-timestamp="{{ item.room.updated_at|date:'U' }}">
+            <div class="card-body p-3">
+                <div class="row align-items-center">
+                    <!-- Customer Info -->
+                    <div class="col-md-5">
+                        <div class="d-flex align-items-center">
+                            <div class="position-relative me-3 flex-shrink-0">
+                                {% if item.customer.profile_pic %}
+                                    <img src="{{ item.customer.profile_pic.url }}" 
+                                         class="rounded-circle border border-3 border-light shadow-sm" 
+                                         style="width: 60px; height: 60px; object-fit: cover;"
+                                         alt="{{ item.customer.name }}">
+                                {% else %}
+                                    <div class="rounded-circle bg-light border border-3 border-light shadow-sm d-flex align-items-center justify-content-center"
+                                         style="width: 60px; height: 60px;">
+                                        <i class="fas fa-user fa-2x text-secondary"></i>
+                                    </div>
+                                {% endif %}
+                                <span class="position-absolute bottom-0 end-0 bg-white rounded-circle p-0 border border-2 border-light">
+                                    <i class="fas fa-circle text-success small" style="font-size: 10px; display: block;"></i>
+                                </span>
+                            </div>
+                            <div class="overflow-hidden">
+                                <h5 class="fw-bold mb-1 text-dark">{{ item.customer.name }}</h5>
+                                <div class="d-flex align-items-center text-secondary small text-truncate">
+                                    <i class="fas fa-envelope me-1 opacity-50"></i>
+                                    {{ item.customer.email|truncatechars:25 }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Last Message Preview -->
+                    <div class="col-md-4 py-2 py-md-0">
+                        <div class="message-preview">
+                            {% with last_msg=item.room.messages.last %}
+                                {% if last_msg %}
+                                    <div class="d-flex align-items-start">
+                                        <i class="fas fa-reply me-2 text-success mt-1" style="font-size: 0.8rem;"></i>
+                                        <div class="overflow-hidden">
+                                            <p class="mb-0 text-dark text-truncate" style="max-width: 100%;">
+                                                {{ last_msg.message }}
+                                            </p>
+                                            <div class="small text-secondary mt-1 fw-medium">
+                                                <i class="far fa-clock me-1 opacity-50"></i>
+                                                {{ last_msg.timestamp|timesince }} ago
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <p class="text-secondary mb-0 fst-italic">
+                                        No messages yet
+                                    </p>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                    </div>
+
+                    <!-- Message Stats & Action -->
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-center justify-content-md-end justify-content-between h-100">
+                            <!-- Unread Badge -->
+                            <div class="me-md-3">
+                                {% with unread_count=item.room.messages.all|dictsortreversed:"is_read"|length %}
+                                    {% if unread_count > 0 %}
+                                        <span class="badge bg-danger rounded-pill px-3 py-2 shadow-sm">
+                                            {{ unread_count }} new
+                                        </span>
+                                    {% else %}
+                                        <span class="text-secondary small fw-medium opacity-50">
+                                            <i class="fas fa-check-double me-1"></i> Read
+                                        </span>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+
+                            <!-- Chat Button -->
+                            <a href="{% url 'owner_chat_room' item.room.id %}" 
+                               class="btn btn-primary rounded-pill px-4 shadow-sm text-white fw-bold"
+                               style="background: linear-gradient(135deg, #0ead63 0%, #068d21 100%); border: none; transition: transform 0.2s;">
+                                <i class="fas fa-comment-dots me-2"></i>
+                                Chat
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="card border-0 shadow-sm rounded-4 bg-white">
+        <div class="card-body text-center py-5">
+            <div class="empty-state-icon mb-4">
+                <i class="fas fa-comments fa-5x text-secondary opacity-25"></i>
+            </div>
+            <h4 class="fw-bold mb-3 text-dark">No Enquiries Yet</h4>
+            <p class="text-secondary mb-4">
+                You haven't received any enquiries for this property.<br>
+                Share your property to get more visibility.
+            </p>
+            <a href="{% url 'property_detail' property.id %}" class="btn btn-primary rounded-pill px-5 py-3 shadow-sm text-white fw-bold">
+                <i class="fas fa-eye me-2"></i>View Property
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+/* Base Layout & Backgrounds */
+body {
+    background-color: beige;; /* Soft light grey-blue background */
+}
+
+.container {
+    max-width: 1200px;
+}
+
+/* Icon Box */
+.icon-box {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Chat Items */
+.chat-item {
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    border-left: 4px solid transparent !important;
+}
+
+.chat-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08) !important;
+    border-left-color: #0ead63 !important;
+}
+
+/* Message Preview */
+.message-preview {
+    /* White background for the message bubble within the card */
+    background: #ffffff;
+    padding: 12px 15px;
+    border-radius: 12px;
+    border: 1px solid #f0f0f0;
+    border-left: 3px solid #0ead63;
+    height: 100%;
+    {% comment %} display: flex; {% endcomment %}
+    align-items: center;
+}
+
+/* Badges & Buttons */
+.badge {
+    letter-spacing: 0.5px;
+}
+
+/* Active Sort Button */
+.active-sort-btn {
+    background-color: #0ead63 !important;
+    color: white !important;
+    border-color: #0ead63 !important;
+}
+
+/* Animations */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.chat-item {
+    animation: slideIn 0.3s ease forwards;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .chat-item .row > div {
+        margin-bottom: 15px;
+        text-align: center;
+        justify-content: center;
+    }
+    
+    .chat-item .col-md-5 .d-flex {
+        justify-content: center;
+    }
+
+    .message-preview {
+        margin: 10px 0;
+        background: #f8f9fa; /* Slightly darker on mobile for contrast */
+        border: none;
+    }
+    
+    .btn-group {
+        width: 100%;
+    }
+    
+    .btn-group .btn {
+        flex: 1;
+    }
+
+    .chat-item .col-md-3 {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+/* Search Highlight */
+.highlight {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+</style>
+
+<script>
+// Search functionality
+function filterChats() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const chatItems = document.querySelectorAll('.chat-item');
+    
+    chatItems.forEach(item => {
+        const customerName = item.getAttribute('data-customer-name');
+        const lastMessage = item.getAttribute('data-last-message');
+        
+        if (customerName.includes(searchTerm) || lastMessage.includes(searchTerm)) {
+            item.style.display = 'block';
+            // Optional: Remove animation class to reset it
+            item.style.animation = 'none';
+            item.offsetHeight; /* trigger reflow */
+            item.style.animation = 'slideIn 0.3s ease forwards';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+// Sort functionality
+function sortBy(criteria) {
+    const chatList = document.getElementById('chatList');
+    const chatItems = Array.from(document.querySelectorAll('.chat-item'));
+    
+    chatItems.sort((a, b) => {
+        if (criteria === 'recent') {
+            const timeA = parseInt(a.getAttribute('data-timestamp'));
+            const timeB = parseInt(b.getAttribute('data-timestamp'));
+            return timeB - timeA; // Descending (most recent first)
+        } else if (criteria === 'name') {
+            const nameA = a.getAttribute('data-customer-name');
+            const nameB = b.getAttribute('data-customer-name');
+            return nameA.localeCompare(nameB);
+        }
+    });
+    
+    // Reorder DOM
+    chatItems.forEach(item => chatList.appendChild(item));
+    
+    // Update active button style
+    document.querySelectorAll('.btn-group .btn').forEach(btn => {
+        btn.classList.remove('active-sort-btn');
+    });
+    event.target.classList.add('active-sort-btn');
+}
+
+// Initialize tooltips and interactions
+document.addEventListener('DOMContentLoaded', function() {
+    // Add click handler to entire chat item
+    document.querySelectorAll('.chat-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            // Don't trigger if clicking on the button
+            if (!e.target.closest('a')) {
+                const chatLink = this.querySelector('a.btn-primary');
+                if (chatLink) {
+                    window.location.href = chatLink.href;
+                }
+            }
+        });
+    });
+    
+    // Set recent sort as default visually
+    document.querySelector('.btn-group .btn:first-child').classList.add('active-sort-btn');
+});
+</script>
+{% endblock %}

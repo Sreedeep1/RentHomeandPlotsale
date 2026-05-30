@@ -1,0 +1,161 @@
+{% extends "user_nav.html" %}
+
+{% block content %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Property Form</title>
+    <link href="https://cdn.jsdelivr.net/nbs/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        label {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body class="container mt-4">
+
+    <h3 class="mb-4">{{ property|yesno:"Edit Property,Add Property" }}</h3>
+
+    <form method="post" enctype="multipart/form-data" class="card p-4">
+        {% csrf_token %}
+        
+        {% for field in form %}
+        <div class="form-group">
+            <label for="{{ field.id_for_label }}" class="form-label">
+                {{ field.label }}
+                {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+            </label>
+            {{ field }}
+            {% if field.help_text %}
+                <small class="form-text text-muted">{{ field.help_text }}</small>
+            {% endif %}
+            {% if field.errors %}
+                <div class="text-danger">
+                    {% for error in field.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <div class="form-group">
+            <label class="form-label">Property Images <span class="text-danger">*</span></label>
+           <input type="file" name="images" multiple class="form-control" accept="image/*">
+
+            <small class="form-text text-muted">Upload multiple images for the property</small>
+        </div>
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-success px-4">Save Property</button>
+            <a href="{% url 'property_list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+
+   {% if property %}
+<hr class="my-4">
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Existing Images</h5>
+        <button type="button" 
+                class="btn btn-info btn-sm"
+                data-bs-toggle="modal"
+                data-bs-target="#addImagesModal"
+                onclick="loadAddImagesModal({{ property.id }})">
+            <i class="fas fa-plus"></i> Add More Images
+        </button>
+    </div>
+    <div class="card-body">
+        <!-- Existing images display -->
+    </div>
+</div>
+
+<!-- Modal (add this at the bottom of the file, before closing body) -->
+<div class="modal fade" id="addImagesModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!-- Modal content will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<script>
+function loadAddImagesModal(propertyId) {
+    fetch(`/property/add-images/${propertyId}/`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.html) {
+            document.querySelector('#addImagesModal .modal-content').innerHTML = data.html;
+            
+            // Initialize the form submission for this modal
+            initializeAddImagesForm(propertyId);
+        }
+    });
+}
+
+
+function initializeAddImagesForm(propertyId) {
+    const form = document.getElementById('addImagesForm');
+    if (!form) return;
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+        const fileInput = this.querySelector('input[type="file"]');
+
+        // ✅ append each file individually
+        for (let i = 0; i < fileInput.files.length; i++) {
+            formData.append('image', fileInput.files[i]);
+        }
+
+        // ✅ CSRF token
+        formData.append(
+            'csrfmiddlewaretoken',
+            this.querySelector('input[name="csrfmiddlewaretoken"]').value
+        );
+
+        fetch(`/property/add-images/${propertyId}/`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert(JSON.stringify(data.errors));
+            }
+        });
+    });
+}
+
+
+
+</script>
+{% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+{% endblock %}

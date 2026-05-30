@@ -1,0 +1,365 @@
+{% extends "user_nav.html" %}
+{%load static%}
+{%block content%}
+    <div class="container ">
+      <div class="row flex-lg-row-reverse align-items-center ">
+
+        <div class="col-lg-6">
+          <img src="{% static 'mainstyle/images/billboard.png' %}" class="d-block mx-lg-auto " alt="Bootstrap Themes" width="700"
+            height="500" loading="lazy">
+        </div>
+
+        <div class="col-lg-6">
+          <h1 class=" text-capitalize  lh-1 my-3">Perfect way to buy and sell a home</h1>
+          <p class="lead">A smart and secure way to rent or list homes online..</p>
+          <nav class="navbar navbar-expand-lg billboard-nav">
+            <div class="container billboard-search p-0">
+
+          
+
+
+            </div>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feature start  -->
+  <section id="feature">
+    <div class="container py-5">
+      <div class="row">
+        <div class="section-header align-center mb-5">
+          <h2 class=" text-capitalize m-0">Featured In</h2>
+        </div>
+      </div>
+      <div class="row d-flex justify-content-between">
+        <div class="col-md-2 ">
+          <div class="my-3" role="group" aria-label="3 / 7" style="width: 158.667px; margin-right: 20px;"><img
+              alt="image" src="{% static 'mainstyle/images/logo1.png' %}"></div>
+        </div>
+        <div class="col-md-2">
+          <div class="my-3" role="group" aria-label="3 / 7" style="width: 158.667px; margin-right: 20px;"><img
+              alt="image" src="{% static 'mainstyle/images/logo2.png' %}"></div>
+        </div>
+        <div class="col-md-2">
+          <div class="my-3" role="group" aria-label="3 / 7" style="width: 158.667px; margin-right: 20px;"><img
+              alt="image" src="{% static 'mainstyle/images/logo3.png' %}"></div>
+        </div>
+        <div class="col-md-2">
+          <div class="my-3" role="group" aria-label="3 / 7" style="width: 158.667px; margin-right: 20px;"><img
+              alt="image" src="{% static 'mainstyle/images/logo4.png' %}"></div>
+        </div>
+        <div class="col-md-2">
+          <div class="my-3" role="group" aria-label="3 / 7" style="width: 158.667px; margin-right: 20px;"><img
+              alt="image" src="{% static 'mainstyle/images/logo6.png' %}"></div>
+        </div>
+
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Residence start  -->
+ <section id="properties">
+  <div class="container my-5 py-5">
+    <h2 class="text-capitalize m-0 py-lg-5">Plot for sale</h2>
+
+    <div class="swiper-button-next residence-swiper-next residence-arrow"></div>
+    <div class="swiper-button-prev residence-swiper-prev residence-arrow"></div>
+
+    <div class="swiper residence-swiper">
+      <div class="swiper-wrapper">
+       {% for plot in plots %}
+  <div class="swiper-slide">
+    <div class="card">
+      <a href="">
+        {% with plot.images.first as img %}
+          {% if img %}
+            <img src="{{ img.image.url }}" class="card-img-top" alt="{{ plot.title }}">
+          {% else %}
+            <img src="{% static 'mainstyle/images/item2.jpg' %}" class="card-img-top" alt="{{ plot.title }}">
+          {% endif %}
+        {% endwith %}
+      </a>
+
+      <div class="card-body p-0">
+        <a href="">
+          <h5 class="card-title pt-4">{{ plot.title }}</h5>
+        </a>
+
+        <p class="card-text">{{ plot.address }}</p>
+
+        <p class="card-text text-primary fw-bold">₹{{ plot.price }}</p>
+
+        <div class="card-text">
+          <ul class="d-flex flex-wrap">
+
+            {% if plot.area %}
+            <li class="residence-list">
+              <img src="{% static 'mainstyle/images/square.png' %}" alt="size">
+              {{ plot.area }} sqft
+            </li>
+            {% endif %}
+
+            {% if plot.plot_type %}
+            <li class="residence-list">
+              <img src="{% static 'mainstyle/images/bed.png' %}" alt="type">
+              {{ plot.get_plot_type_display }}
+            </li>
+            {% endif %}
+
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  {% empty %}
+  <div class="swiper-slide">
+    <div class="card">
+      <div class="card-body p-5 text-center">
+        <p class="text-muted">No plots available at the moment.</p>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+      </div>
+    </div>
+    <div class="residence-btn">
+      <a href="{% url 'browse_property' %}" class="btn btn-primary btn-lg my-5">View All Rental Properties</a>
+    </div>
+  </div>
+</section>
+
+<!-- Plots for Sale Section -->
+<section id="plots">
+  <div class="container my-5 py-5">
+    <h2 class="text-capitalize m-0 py-lg-5">Properties for Rent</h2>
+
+    <div class="swiper-button-next residence-swiper-next residence-arrow"></div>
+    <div class="swiper-button-prev residence-swiper-prev residence-arrow"></div>
+
+    <div class="swiper residence-swiper">
+      <div class="swiper-wrapper">
+       {% for property in properties %}
+  <div class="swiper-slide">
+    <div class="card">
+      <a href="">
+        {% with property.images.first as img %}
+          {% if img %}
+            <img src="{{ img.image.url }}" class="card-img-top" alt="{{ property.title }}">
+          {% else %}
+            <img src="{% static 'mainstyle/images/item15.png' %}" class="card-img-top" alt="{{ property.title }}">
+          {% endif %}
+        {% endwith %}
+      </a>
+
+      <div class="card-body p-0">
+        <a href="">
+          <h5 class="card-title pt-4">{{ property.title }}</h5>
+        </a>
+
+        <p class="card-text">{{ property.address }}</p>
+
+        <p class="card-text text-primary fw-bold">₹{{ property.rent_amount }}/month</p>
+
+        <div class="card-text">
+          <ul class="d-flex flex-wrap">
+
+            {% if property.bedrooms %}
+            <li class="residence-list">
+              <img src="{% static 'mainstyle/images/bed.png' %}" alt="bed">
+              {{ property.bedrooms }} Beds
+            </li>
+            {% endif %}
+
+            {% if property.bathrooms %}
+            <li class="residence-list">
+              <img src="{% static 'mainstyle/images/bath.png' %}" alt="bath">
+              {{ property.bathrooms }} Baths
+            </li>
+            {% endif %}
+
+            {% if property.size_sqft %}
+            <li class="residence-list">
+              <img src="{% static 'mainstyle/images/square.png' %}" alt="sqft">
+              {{ property.size_sqft }} Sqft
+            </li>
+            {% endif %}
+
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  {% empty %}
+  <div class="swiper-slide">
+    <div class="card">
+      <div class="card-body p-5 text-center">
+        <p class="text-muted">No properties available at the moment.</p>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+      </div>
+    </div>
+    <div class="residence-btn">
+      <a href="{% url 'browse_property' %}" class="btn btn-primary btn-lg my-5">View All Plots for Sale</a>
+    </div>
+  </div>
+</section>
+
+  <!--About us start  -->
+  <section id="about-us">
+    <div class="container">
+      <div class="row py-lg-5">
+
+        <h2 class="text-capitalize text-center m-0 py-lg-5">Why to choose us</h2>
+
+        <div class="text-center col-lg-4">
+          <img src="{% static 'mainstyle/images/search.png'%}" class="bd-placeholder-img rounded-circle" alt="Bootstrap Themes" width="140"
+            height="140" loading="lazy">
+          <h4 class="fw-normal mt-5 ">Wide Selection</h4>
+          <p>Extensive listings of rental properties and plots for sale. Find exactly what you're looking for with our comprehensive database.</p>
+        </div>
+
+        <div class="text-center col-lg-4">
+          <img src="{% static 'mainstyle/images/price.png'%}" class="bd-placeholder-img rounded-circle" alt="Bootstrap Themes" width="140"
+            height="140" loading="lazy">
+          <h4 class="fw-normal mt-5">Best Prices</h4>
+          <p>Competitive rental rates and plot prices. Get the best value for your money with our verified listings and negotiations.</p>
+        </div>
+
+        <div class="text-center col-lg-4">
+          <img src="{% static 'mainstyle/images/time.png'%}" class="bd-placeholder-img rounded-circle" alt="Bootstrap Themes" width="140"
+            height="140" loading="lazy">
+          <h4 class="fw-normal mt-5 ">Fast & Easy Process</h4>
+          <p>Quick property search, easy booking for rentals, and smooth transaction process for plot purchases. </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonial start  -->
+  <section id="testimonial">
+    <div class="container my-5">
+
+
+
+      <div class="swiper testimonial-swiper">
+        <div class="swiper-wrapper">
+
+          <div class="swiper-slide">
+            <div class="row my-5 py-lg-5">
+              <div class="col-md-8 mx-auto">
+                <img src="{% static 'mainstyle/images/quote.png'%}" class="rounded mx-auto d-inline" alt="...">
+                <p class="testimonial-p mt-4">"Found the perfect apartment for rent through Rentiz. The process was smooth and the agent was very helpful. Highly recommended!".</p>
+
+                <div class="row">
+                  <div class="col-md-8">
+                    <p class="pt-5 mb-1">Sarah Johnson</p>
+                    <p class="">Rental Client</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="swiper-slide">
+            <div class="row my-5 py-lg-5">
+              <div class="col-md-8 mx-auto">
+                <img src="{% static 'mainstyle/images/quote.png'%}" class="rounded mx-auto d-inline" alt="...">
+                <p class="testimonial-p mt-4">"Great experience buying a plot through Rentiz. Transparent process, fair pricing, and excellent customer service."</p>
+
+                <div class="row">
+                  <div class="col-md-8">
+                    <p class="pt-5 mb-1">Michael Chen</p>
+                  <p>Plot Buyer</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="swiper-slide">
+            <div class="row my-5 py-lg-5">
+              <div class="col-md-8 mx-auto">
+                <img src="{% static 'mainstyle/images/quote.png'%}" class="rounded mx-auto d-inline" alt="...">
+               <p class="testimonial-p mt-4">"As a property owner, Rentiz helped me find reliable tenants quickly. Their platform is user-friendly and efficient."</p>
+              <div class="row">
+                <div class="col-md-8">
+                  <p class="pt-5 mb-1">David Williams</p>
+                  <p>Property Owner</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+
+
+        </div>
+
+        <div class=" testimonial-swiper-button col-md-3 position-absolute">
+          <div class="swiper-button-prev testimonial-arrow"></div>
+          <div class="arrow-divider"> | </div>
+          <div class="swiper-button-next testimonial-arrow"></div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Help start  -->
+  <section id="help" class="py-5"
+    style="background: linear-gradient(270deg, #1A242F 0.01%, rgba(26, 36, 47, 0.00) 100%);">
+    <div class="container-lg my-5">
+
+      <div class="row d-flex justify-content-between align-items-center">
+
+        <div class="col-md-6">
+          <div class="image-holder d-flex">
+            <img src="{% static 'mainstyle/images/group.png'%}" class="img" alt="Bootstrap Themes" loading="lazy">
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="text-content ps-md-5 mt-4 mt-md-0">
+            <h2 class="text-capitalize" style="
+    margin-left: 55px;
+">We help people find their perfect property and plots</h2>
+          <p style="
+    margin-left: 55px;
+">Whether you're looking for a rental property or planning to buy a plot for investment or construction, we're here to help. Our experienced team guides you through every step of the process, from search to final deal.
+          </div>
+        </div>
+
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Lets start  -->
+  <section id="start">
+    <div class="container my-5 py-5">
+      <div class="row featurette py-lg-5 ">
+        <div class="col-md-5 order-md-1 d-flex">
+          <h1 class="text-capitalize  lh-1 mb-3">Let’s simply begin with rentiz.</h1>
+        </div>
+        <div class="col-md-7 order-md-2">
+          <div class="text-content ps-md-5 mt-4 mt-md-0">
+             <p class="py-lg-2">Whether you want to rent a property, sell your property, or buy a plot, we've got you covered. Join thousands of satisfied customers who found their perfect space through Rentiz.</p>
+         <a href="{% url 'browse_property' %}" class="btn btn-primary btn-lg px-4 me-md-2">Get
+              Started</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {% endblock %}

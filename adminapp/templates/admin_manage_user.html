@@ -1,0 +1,62 @@
+{%extends "admin_nav.html"%}
+{%block content%}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>View Users</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 90%;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        button {
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<h2>User List</h2>
+
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Phone</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
+
+    {% for user in users %}
+    <tr>
+        <td>{{ user.name }}</td>
+        <td>{{ user.phone }}</td>
+        <td>{{ user.status }}</td>
+        <td>
+            <form method="post" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="user_id" value="{{ user.id }}">
+
+                {% if user.status == "Active" %}
+                    <button type="submit" name="action" value="revoke">Revoke</button>
+                {% else %}
+                    <button type="submit" name="action" value="restore">Restore</button>
+                {% endif %}
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+</body>
+</html>
+
+{%endblock%}

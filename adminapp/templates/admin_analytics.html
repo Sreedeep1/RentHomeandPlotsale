@@ -1,0 +1,824 @@
+{% extends "admin_nav.html" %}
+{% block content %}
+{% load static %}
+
+<style>
+    h3,td{color: var(--dark);}
+:root {
+    --primary: #198754;
+    --secondary: #0d6efd;
+    --danger: #dc3545;
+    --warning: #ffc107;
+    --info: #0dcaf0;
+    --dark: #212529;
+    --light: #f8f9fa;
+    --border: #dee2e6;
+}
+
+.analytics-wrap {
+    padding: 30px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Header */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.page-title h2 {
+    margin: 0;
+    color: var(--dark);
+    font-size: 28px;
+}
+
+.page-title p {
+    margin: 5px 0 0 0;
+    color: #6c757d;
+}
+
+/* Date Filter */
+.date-filter {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.date-filter select {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.date-filter .btn {
+    padding: 8px 16px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(139, 8, 8, 0.06);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border: 1px solid var(--border);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+}
+
+.stat-icon.blue { background: #e7f5ff; color: #0d6efd; }
+.stat-icon.green { background: #d1e7dd; color: #198754; }
+.stat-icon.yellow { background: #fff3cd; color: #856404; }
+.stat-icon.red { background: #f8d7da; color: #dc3545; }
+.stat-icon.purple { background: #e2d9f3; color: #6f42c1; }
+
+.stat-details h3 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.stat-details p {
+    margin: 5px 0 0;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+/* Section Headers */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 30px 0 20px;
+}
+
+.section-header h3 {
+    margin: 0;
+    font-size: 20px;
+    color: var(--dark);
+}
+
+.section-header a {
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 14px;
+}
+
+/* FIXED CHART CONTAINERS */
+.chart-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.chart-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-card.small-chart {
+    height: 350px;
+}
+
+.chart-title {
+    margin: 0 0 20px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--dark);
+    flex-shrink: 0;
+}
+
+.chart-container {
+    flex: 1;
+    position: relative;
+    min-height: 0;
+    width: 100%;
+}
+
+.chart-container canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 300px;
+}
+
+.small-chart .chart-container canvas {
+    max-height: 250px;
+}
+
+/* Progress Bars Container */
+.progress-container {
+    padding: 10px;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.progress-item {
+    margin-bottom: 20px;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-size: 13px;
+}
+
+.progress-bar {
+    height: 10px;
+    background: var(--light);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 5px;
+}
+
+/* Tables */
+.table-container {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    text-align: left;
+    padding: 12px;
+    background: var(--light);
+    font-weight: 600;
+    font-size: 13px;
+    color: #495057;
+}
+
+td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+/* Badges */
+.badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.badge-success { background: #d1e7dd; color: #0f5132; }
+.badge-warning { background: #fff3cd; color: #856404; }
+.badge-danger { background: #f8d7da; color: #842029; }
+.badge-info { background: #cff4fc; color: #055160; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .analytics-wrap { padding: 15px; }
+    .chart-row { grid-template-columns: 1fr; }
+    .page-header { flex-direction: column; align-items: start; }
+    .date-filter { width: 100%; flex-wrap: wrap; }
+    .chart-card { height: 350px; }
+    .chart-card.small-chart { height: 300px; }
+}
+</style>
+
+<div class="analytics-wrap">
+    
+    <!-- Header -->
+    <div class="page-header">
+        <div class="page-title">
+            <h2 style="color: var(--light);">Analytics Dashboard</h2>
+            <p>Overview of your platform statistics</p>
+        </div>
+        
+        <!-- Date Filter -->
+        <div class="date-filter">
+            <form method="get">
+                <select name="days">
+                    <option value="7" {% if days == 7 %}selected{% endif %}>Last 7 days</option>
+                    <option value="30" {% if days == 30 %}selected{% endif %}>Last 30 days</option>
+                    <option value="90" {% if days == 90 %}selected{% endif %}>Last 90 days</option>
+                    <option value="365" {% if days == 365 %}selected{% endif %}>Last year</option>
+                </select>
+                <button type="submit" class="btn">Apply</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon blue">
+                <i class="fas fa-building"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ total_properties|default:"0" }}</h3>
+                <p>Total Properties</p>
+                <small>↑ {{ approved_properties|default:"0" }} Approved</small>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon green">
+                <i class="fas fa-map-marked-alt"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ total_plots|default:"0" }}</h3>
+                <p>Total Plots</p>
+                <small>↑ {{ approved_plots|default:"0" }} Approved</small>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon purple">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ total_users|default:"0" }}</h3>
+                <p>Total Users</p>
+                <small>+{{ new_users|default:"0" }} this period</small>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon yellow">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ pending_properties|add:pending_plots|default:"0" }}</h3>
+                <p>Pending Approval</p>
+                <small>{{ pending_properties|default:"0" }} props, {{ pending_plots|default:"0" }} plots</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 1: Trends -->
+    <div class="chart-row">
+        <div class="chart-card">
+            <h4 class="chart-title">Property Uploads (Last {{ days }} Days)</h4>
+            <div class="chart-container">
+                <canvas id="propertyTrendChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-card">
+            <h4 class="chart-title">Plot Uploads (Last {{ days }} Days)</h4>
+            <div class="chart-container">
+                <canvas id="plotTrendChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 2: Monthly & Status -->
+    <div class="chart-row">
+        <div class="chart-card">
+            <h4 class="chart-title">Monthly Growth (Last 6 Months)</h4>
+            <div class="chart-container">
+                <canvas id="monthlyChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-card">
+            <h4 class="chart-title">Status Distribution</h4>
+            <div class="progress-container">
+                <h5 style="margin:0 0 15px 0; color: var(--primary);">Properties</h5>
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span>Pending</span>
+                        <span>{{ pending_properties|default:"0" }}</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width:{% widthratio pending_properties total_properties 100 %}%; background:#856404;"></div>
+                    </div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span>Approved</span>
+                        <span>{{ approved_properties|default:"0" }}</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width:{% widthratio approved_properties total_properties 100 %}%; background:#198754;"></div>
+                    </div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span>Rejected</span>
+                        <span>{{ rejected_properties|default:"0" }}</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width:{% widthratio rejected_properties total_properties 100 %}%; background:#dc3545;"></div>
+                    </div>
+                </div>
+                
+                <h5 style="margin:20px 0 15px 0; color: var(--primary);">Plots</h5>
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span>Pending</span>
+                        <span>{{ pending_plots|default:"0" }}</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width:{% widthratio pending_plots total_plots 100 %}%; background:#856404;"></div>
+                    </div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span>Approved</span>
+                        <span>{{ approved_plots|default:"0" }}</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width:{% widthratio approved_plots total_plots 100 %}%; background:#198754;"></div>
+                    </div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span>Rejected</span>
+                        <span>{{ rejected_plots|default:"0" }}</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width:{% widthratio rejected_plots total_plots 100 %}%; background:#dc3545;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Property Details Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-details">
+                <h3>{{ available_properties|default:"0" }}</h3>
+                <p>Available for Rent</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="fas fa-bed"></i></div>
+            <div class="stat-details">
+                <h3>{{ properties_1bhk|add:properties_2bhk|add:properties_3bhk|add:properties_4plus|default:"0" }}</h3>
+                <p>Total Bedrooms</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon purple"><i class="fas fa-couch"></i></div>
+            <div class="stat-details">
+                <h3>{{ furnished_properties|default:"0" }}</h3>
+                <p>Furnished</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon yellow"><i class="fas fa-chair"></i></div>
+            <div class="stat-details">
+                <h3>{{ semi_furnished|default:"0" }}</h3>
+                <p>Semi-Furnished</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Property Category & Bedroom Charts -->
+    <div class="chart-row">
+        <div class="chart-card small-chart">
+            <h4 class="chart-title">Properties by Category</h4>
+            <div class="chart-container">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-card small-chart">
+            <h4 class="chart-title">Properties by Bedrooms</h4>
+            <div class="chart-container">
+                <canvas id="bedroomChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Plot Details Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-details">
+                <h3>{{ available_plots|default:"0" }}</h3>
+                <p>Available for Sale</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="fas fa-tag"></i></div>
+            <div class="stat-details">
+                <h3>{{ sold_plots|default:"0" }}</h3>
+                <p>Sold</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon purple"><i class="fas fa-clock"></i></div>
+            <div class="stat-details">
+                <h3>{{ reserved_plots|default:"0" }}</h3>
+                <p>Reserved</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon yellow"><i class="fas fa-water"></i></div>
+            <div class="stat-details">
+                <h3>{{ plots_with_water|default:"0" }}</h3>
+                <p>With Water</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Plot Type & Price Charts -->
+    <div class="chart-row">
+        <div class="chart-card small-chart">
+            <h4 class="chart-title">Plots by Type</h4>
+            <div class="chart-container">
+                <canvas id="plotTypeChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-card small-chart">
+            <h4 class="chart-title">Price Range Distribution</h4>
+            <div class="chart-container">
+                <canvas id="priceChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Owners -->
+    <div class="section-header">
+        <h3>Top Contributors</h3>
+    </div>
+
+    <div class="chart-row">
+        <div class="chart-card" style="height: auto; min-height: 300px;">
+            <h4 class="chart-title">Top Property Owners</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Owner</th>
+                        <th>Email</th>
+                        <th>Properties</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for owner in top_property_owners %}
+                    <tr>
+                        <td>{{ owner.name }}</td>
+                        <td>{{ owner.login.email }}</td>
+                        <td><span class="badge badge-success">{{ owner.property_count }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" style="text-align:center;">No data available</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="chart-card" style="height: auto; min-height: 300px;">
+            <h4 class="chart-title">Top Plot Owners</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Owner</th>
+                        <th>Email</th>
+                        <th>Plots</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for owner in top_plot_owners %}
+                    <tr>
+                        <td>{{ owner.name }}</td>
+                        <td>{{ owner.login.email }}</td>
+                        <td><span class="badge badge-success">{{ owner.plot_count }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" style="text-align:center;">No data available</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="section-header">
+        <h3>Recent Properties</h3>
+        <a href="{% url 'admin_properties' %}">View all →</a>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Owner</th>
+                    <th>Price</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for prop in recent_properties %}
+                <tr>
+                    <td>{{ prop.title|truncatechars:30 }}</td>
+                    <td>{{ prop.owner.name }}</td>
+                    <td>₹{{ prop.rent_amount|floatformat:0 }}</td>
+                    <td>
+                        <span class="badge {% if prop.admin_status == 'approved' %}badge-success{% elif prop.admin_status == 'pending' %}badge-warning{% else %}badge-danger{% endif %}">
+                            {{ prop.get_admin_status_display }}
+                        </span>
+                    </td>
+                    <td>{{ prop.created_at|date:"d M Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" style="text-align:center;">No recent properties</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Property Trend Chart
+    const propertyCtx = document.getElementById('propertyTrendChart')?.getContext('2d');
+    if (propertyCtx) {
+        new Chart(propertyCtx, {
+            type: 'line',
+            data: {
+                labels: {{ property_trend_labels|safe }},
+                datasets: [{
+                    label: 'Properties',
+                    data: {{ property_trend_data|safe }},
+                    borderColor: '#198754',
+                    backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+
+    // Plot Trend Chart
+    const plotCtx = document.getElementById('plotTrendChart')?.getContext('2d');
+    if (plotCtx) {
+        new Chart(plotCtx, {
+            type: 'line',
+            data: {
+                labels: {{ property_trend_labels|safe }},
+                datasets: [{
+                    label: 'Plots',
+                    data: {{ plot_trend_data|safe }},
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+
+    // Monthly Chart
+    const monthlyCtx = document.getElementById('monthlyChart')?.getContext('2d');
+    if (monthlyCtx) {
+        new Chart(monthlyCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ monthly_labels|safe }},
+                datasets: [
+                    {
+                        label: 'Properties',
+                        data: {{ monthly_properties|safe }},
+                        backgroundColor: '#198754'
+                    },
+                    {
+                        label: 'Plots',
+                        data: {{ monthly_plots|safe }},
+                        backgroundColor: '#0d6efd'
+                    },
+                    {
+                        label: 'Users',
+                        data: {{ monthly_users|safe }},
+                        backgroundColor: '#ffc107'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' }
+                }
+            }
+        });
+    }
+
+    // Category Chart
+    const categoryCtx = document.getElementById('categoryChart')?.getContext('2d');
+    if (categoryCtx) {
+        new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [{% for cat in properties_by_category %}'{{ cat.category_name }}',{% endfor %}],
+                datasets: [{
+                    data: [{% for cat in properties_by_category %}{{ cat.count }},{% endfor %}],
+                    backgroundColor: ['#198754', '#0d6efd', '#ffc107', '#dc3545', '#6f42c1', '#fd7e14', '#20c997']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+
+    // Bedroom Chart
+    const bedroomCtx = document.getElementById('bedroomChart')?.getContext('2d');
+    if (bedroomCtx) {
+        new Chart(bedroomCtx, {
+            type: 'bar',
+            data: {
+                labels: ['1 BHK', '2 BHK', '3 BHK', '4+ BHK'],
+                datasets: [{
+                    label: 'Properties',
+                    data: [{{ properties_1bhk|default:"0" }}, {{ properties_2bhk|default:"0" }}, {{ properties_3bhk|default:"0" }}, {{ properties_4plus|default:"0" }}],
+                    backgroundColor: '#198754'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+
+    // Plot Type Chart
+    const plotTypeCtx = document.getElementById('plotTypeChart')?.getContext('2d');
+    if (plotTypeCtx) {
+        new Chart(plotTypeCtx, {
+            type: 'pie',
+            data: {
+                labels: [{% for type in plots_by_type %}'{{ type.name }}',{% endfor %}],
+                datasets: [{
+                    data: [{% for type in plots_by_type %}{{ type.count }},{% endfor %}],
+                    backgroundColor: ['#198754', '#0d6efd', '#ffc107', '#dc3545', '#6f42c1', '#fd7e14', '#20c997']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+
+    // Price Chart
+    const priceCtx = document.getElementById('priceChart')?.getContext('2d');
+    if (priceCtx) {
+        new Chart(priceCtx, {
+            type: 'bar',
+            data: {
+                labels: ['< 10k', '10k-20k', '20k-30k', '30k-50k', '> 50k'],
+                datasets: [
+                    {
+                        label: 'Properties (Rent)',
+                        data: [{{ property_price_ranges.under_10k|default:"0" }}, {{ property_price_ranges.10k_20k|default:"0" }}, {{ property_price_ranges.20k_30k|default:"0" }}, {{ property_price_ranges.30k_50k|default:"0" }}, {{ property_price_ranges.above_50k|default:"0" }}],
+                        backgroundColor: '#198754'
+                    },
+                    {
+                        label: 'Plots (Price in Lakhs)',
+                        data: [{{ plot_price_ranges.under_5l|default:"0" }}, {{ plot_price_ranges.5l_10l|default:"0" }}, {{ plot_price_ranges.10l_20l|default:"0" }}, {{ plot_price_ranges.20l_50l|default:"0" }}, {{ plot_price_ranges.above_50l|default:"0" }}],
+                        backgroundColor: '#0d6efd'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' }
+                }
+            }
+        });
+    }
+});
+</script>
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+{% endblock %}

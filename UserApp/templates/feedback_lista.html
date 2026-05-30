@@ -1,0 +1,629 @@
+{% extends "user_nav.html" %}
+{% block content %}
+
+<style>
+    /* --- CORE VARIABLES & RESET --- */
+    :root {
+        /* Safe Colors matching your existing theme */
+        --primary: #198754;
+        --primary-hover: #157347;
+        --dark: #111;
+        --light: #f8f9fa;
+        --border: #dee2e6;
+        --text: #333333;
+        --text-muted: #6c757d;
+        --danger: #dc3545;
+        --white: #ffffff;
+        --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        --radius: 12px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background-color: #f4f6f9;
+        color: var(--text);
+    }
+
+    /* --- LAYOUT WRAPPER --- */
+    .feedback-wrap {
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+
+    /* --- HEADER SECTION --- */
+    .header-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 35px;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .page-title h2 {
+        margin: 0;
+        font-size: 24px;
+        color: var(--dark);
+        font-weight: 700;
+    }
+
+    .page-title p {
+        margin: 5px 0 0 0;
+        color: var(--text-muted);
+        font-size: 14px;
+    }
+
+    /* --- BUTTONS --- */
+    .btn {
+        background: var(--primary);
+        color: var(--white);
+        border: none;
+        padding: 10px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .btn:hover {
+        background: var(--primary-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(25, 135, 84, 0.2);
+    }
+
+    .btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .btn-outline {
+        background: transparent;
+        color: var(--primary);
+        border: 2px solid var(--primary);
+        box-shadow: none;
+    }
+
+    .btn-outline:hover {
+        background: var(--primary);
+        color: var(--white);
+    }
+
+    /* --- FEEDBACK LIST --- */
+    .feedback-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .feedback-card {
+        background: var(--white);
+        border-radius: var(--radius);
+        padding: 25px;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .feedback-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+        border-color: #c3e6cb;
+    }
+
+    /* Decorative side border based on type (handled by JS or classes) */
+    .feedback-card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: var(--primary);
+    }
+
+    .feedback-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #f1f1f1;
+    }
+
+    .feedback-user-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .user-avatar-circle {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary), #20c997);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 20px;
+        text-transform: uppercase;
+    }
+
+    .feedback-meta h4 {
+        margin: 0;
+        color: var(--dark);
+        font-size: 16px;
+    }
+
+    .feedback-meta span {
+        display: block;
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 4px;
+    }
+
+    .badge {
+        font-size: 11px;
+        text-transform: uppercase;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+    
+    /* Badge Colors based on Type */
+    .badge-suggestion { background: #e2e3e5; color: #383d41; }
+    .badge-complaint { background: #f8d7da; color: #842029; }
+    .badge-bug { background: #fff3cd; color: #664d03; }
+    .badge-feature { background: #cff4fc; color: #055160; }
+    .badge-technical { background: #d1e7dd; color: #0f5132; }
+    .badge-other { background: #e2e3e5; color: #383d41; }
+
+    .feedback-subject {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--dark);
+        margin: 0 0 10px 0;
+    }
+
+    .feedback-body {
+        color: #555;
+        line-height: 1.6;
+        font-size: 15px;
+        white-space: pre-wrap; /* Preserves line breaks from user input */
+    }
+
+    /* --- MODAL --- */
+    .modal-overlay {
+        display: none; /* Hidden by default */
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        z-index: 1050;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.active {
+        display: flex;
+        opacity: 1;
+    }
+
+    .modal-content {
+        background: var(--white);
+        width: 100%;
+        max-width: 600px;
+        border-radius: var(--radius);
+        overflow: hidden;
+        transform: scale(0.95);
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .modal-overlay.active .modal-content {
+        transform: scale(1);
+    }
+
+    .modal-header {
+        background: var(--primary);
+        color: white;
+        padding: 20px 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-title {
+        font-size: 20px;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .modal-close {
+        background: rgba(255,255,255,0.2);
+        border: none;
+        color: white;
+        font-size: 20px;
+        cursor: pointer;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+    }
+
+    .modal-close:hover {
+        background: rgba(255,255,255,0.4);
+    }
+
+    .modal-body {
+        padding: 30px;
+        overflow-y: auto;
+    }
+
+    /* --- FORM STYLES --- */
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: var(--dark);
+        font-size: 14px;
+    }
+
+    .form-label.required::after {
+        content: " *";
+        color: var(--danger);
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 15px;
+        transition: all 0.2s ease;
+        color: var(--text);
+        background-color: #fff;
+        font-family: inherit;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.1);
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 30px;
+    }
+
+    /* --- EMPTY STATE --- */
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+        background: var(--white);
+        border-radius: var(--radius);
+        border: 2px dashed var(--border);
+    }
+
+    .empty-icon {
+        font-size: 64px;
+        color: #dee2e6;
+        margin-bottom: 20px;
+    }
+
+    /* --- TOAST NOTIFICATION --- */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1100;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .toast {
+        background: white;
+        border-radius: 8px;
+        padding: 16px 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        min-width: 300px;
+        border-left: 5px solid;
+        animation: slideInRight 0.3s ease forwards;
+    }
+
+    .toast-success { border-color: var(--primary); }
+    .toast-error { border-color: var(--danger); }
+
+    .toast-icon {
+        font-size: 20px;
+    }
+    .toast-success .toast-icon { color: var(--primary); }
+    .toast-error .toast-icon { color: var(--danger); }
+
+    @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* --- RESPONSIVE --- */
+    @media (max-width: 768px) {
+        .header-bar {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .header-bar .btn {
+            width: 100%;
+            justify-content: center;
+        }
+        .feedback-header {
+            flex-direction: column;
+            gap: 12px;
+        }
+        .feedback-user-info {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="feedback-wrap">
+
+    <!-- HEADER -->
+    <div class="header-bar">
+        <div class="page-title">
+            <h2>My Feedback</h2>
+            <p>View your feedback history and help us improve</p>
+        </div>
+        <button class="btn" onclick="openModal()">
+            <i class="fas fa-plus"></i> New Feedback
+        </button>
+    </div>
+
+    <!-- FEEDBACK LIST -->
+    {% if feedbacks %}
+        <div class="feedback-list">
+            {% for fb in feedbacks %}
+            <div class="feedback-card">
+                <div class="feedback-header">
+                    <div class="feedback-user-info">
+                        <div class="user-avatar-circle">
+                            <!-- Safely get first char of name -->
+                            {{ fb.user.name|slice:":1"|upper }}
+                        </div>
+                        <div class="feedback-meta">
+                            <h4>{{ fb.user.name }}</h4>
+                            <span>
+                                <i class="far fa-calendar-alt"></i> {{ fb.created_at|date:"d M Y, h:i A" }}
+                            </span>
+                        </div>
+                    </div>
+                    <!-- Feedback Type Badge -->
+                    <span class="badge badge-{{ fb.feedback_type }}">
+                        {{ fb.get_feedback_type_display }}
+                    </span>
+                </div>
+                
+                <h3 class="feedback-subject">{{ fb.subject }}</h3>
+                <div class="feedback-body">
+                    {{ fb.message }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- EMPTY STATE -->
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="far fa-comments"></i>
+            </div>
+            <h3>No Feedback Yet</h3>
+            <p style="color: var(--text-muted);">We'd love to hear from you. Submit your first feedback today.</p>
+            <button class="btn" style="margin-top: 20px;" onclick="openModal()">
+                <i class="fas fa-pen"></i> Write Feedback
+            </button>
+        </div>
+    {% endif %}
+
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="feedbackModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Submit New Feedback</h3>
+            <button class="modal-close" onclick="closeModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <form method="POST" id="feedbackForm" action="{% url 'submit_feedback' %}">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label class="form-label required">Feedback Type</label>
+                    <select name="feedback_type" id="feedbackType" class="form-control" required>
+                        <option value="suggestion">Suggestion</option>
+                        <option value="complaint">Complaint</option>
+                        <option value="bug">Bug Report</option>
+                        <option value="feature">Feature Request</option>
+                        <option value="technical">Technical Issue</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">Subject</label>
+                    <input type="text" name="subject" id="feedbackSubject" class="form-control" 
+                           required placeholder="Brief summary of your feedback">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label required">Message</label>
+                    <textarea name="message" id="feedbackMessage" class="form-control" 
+                              placeholder="Please describe your experience in detail..." required></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn" id="submitBtn">
+                        <i class="fas fa-paper-plane"></i> Submit Feedback
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- FONT AWESOME -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<script>
+    // --- UI INTERACTION ---
+
+    function openModal() {
+        const modal = document.getElementById('feedbackModal');
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        // Reset form
+        document.getElementById('feedbackForm').reset();
+        // Set default focus
+        setTimeout(() => document.getElementById('feedbackSubject').focus(), 100);
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('feedbackModal');
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+
+    // Close modal if clicking outside the content
+    document.getElementById('feedbackModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeModal();
+        }
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === "Escape") {
+            closeModal();
+        }
+    });
+
+    // --- TOAST NOTIFICATION SYSTEM ---
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        
+        const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        
+        toast.innerHTML = `
+            <div class="toast-icon"><i class="fas ${iconClass}"></i></div>
+            <div class="toast-message">${message}</div>
+            <div style="margin-left:auto; cursor:pointer;" onclick="this.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </div>
+        `;
+
+        container.appendChild(toast);
+
+        // Auto remove after 4 seconds
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+
+    // --- AJAX FORM HANDLING ---
+    document.getElementById('feedbackForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const submitBtn = document.getElementById('submitBtn');
+        const originalBtnContent = submitBtn.innerHTML;
+        
+        // Loading State
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+        const formData = new FormData(this);
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        fetch('{% url "submit_feedback" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showToast(data.message || 'Feedback submitted successfully!', 'success');
+                closeModal();
+                // Reload page after short delay to show new feedback
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                showToast(data.message || 'An error occurred.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnContent;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Connection error. Please try again.', 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnContent;
+        });
+    });
+</script>
+
+{% endblock %}

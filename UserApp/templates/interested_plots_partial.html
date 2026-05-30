@@ -1,0 +1,465 @@
+{% load static %}
+
+<div class="interested-plots-container">
+    {% if interested_items %}
+        <div class="interested-header">
+            <h3>My Interested Plots ({{ interested_items|length }})</h3>
+            <p class="text-muted">Plots you've shown interest in</p>
+        </div>
+        
+        <div class="interested-plots-grid">
+            {% for item in interested_items %}
+                <div class="interested-card" data-interest-id="{{ item.id }}">
+                    <div class="card-image">
+                        {% if item.plot.images.first %}
+                            <img src="{{ item.plot.images.first.image.url }}" alt="{{ item.plot.title }}">
+                        {% else %}
+                            <img src="{% static 'images/no-image.jpg' %}" alt="No Image Available">
+                        {% endif %}
+                        
+                        {% if item.plot.availability_status == 'Available' %}
+                            <span class="status-badge available">Available</span>
+                        {% elif item.plot.availability_status == 'Reserved' %}
+                            <span class="status-badge reserved">Reserved</span>
+                        {% else %}
+                            <span class="status-badge sold">Sold</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-content">
+                        <h4 class="plot-title">{{ item.plot.title }}</h4>
+                        
+                        <div class="plot-location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>{{ item.plot.address|truncatechars:40 }}</span>
+                        </div>
+                        
+                        <div class="plot-details-grid">
+                            <div class="detail-item">
+                                <i class="fas fa- rupee-sign"></i>
+                                <span class="detail-label">Price:</span>
+                                <span class="detail-value">₹ {{ item.plot.price|floatformat:2 }}</span>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <i class="fas fa-vector-square"></i>
+                                <span class="detail-label">Area:</span>
+                                <span class="detail-value">{{ item.plot.area }} sq.ft</span>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <i class="fas fa-tag"></i>
+                                <span class="detail-label">Type:</span>
+                                <span class="detail-value">{{ item.plot.get_plot_type_display }}</span>
+                            </div>
+                            
+                            {% if item.plot.water or item.plot.electricity or item.plot.gated_community %}
+                            <div class="detail-item amenities">
+                                <i class="fas fa-star"></i>
+                                <span class="detail-label">Amenities:</span>
+                                <div class="amenities-list">
+                                    {% if item.plot.water %}
+                                        <span class="amenity-tip" title="Water Available">💧</span>
+                                    {% endif %}
+                                    {% if item.plot.electricity %}
+                                        <span class="amenity-tip" title="Electricity Connected">⚡</span>
+                                    {% endif %}
+                                    {% if item.plot.gated_community %}
+                                        <span class="amenity-tip" title="Gated Community">🏘️</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        {% if item.message %}
+                            <div class="interest-message">
+                                <i class="fas fa-quote-left"></i>
+                                <p class="message-text">{{ item.message|truncatechars:100 }}</p>
+                                <span class="message-date">Added: {{ item.created_at|date:"M d, Y" }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="card-actions">
+                            <a href="{% url 'plot_detail' item.plot.id %}" class="btn-view">
+                                <i class="fas fa-eye"></i> View Details
+                            </a>
+                            
+                            <button class="btn-remove" onclick="removeInterest({{ item.id }})">
+                                <i class="fas fa-trash-alt"></i> Remove
+                            </button>
+                        </div>
+                        
+                        <!-- Hidden form for removal -->
+                        <form id="remove-interest-form-{{ item.id }}" 
+                              action="{% url 'remove_interest' item.id %}" 
+                              method="POST" 
+                              style="display: none;">
+                            {% csrf_token %}
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fas fa-star"></i>
+            </div>
+            <h3>No Interested Plots Yet</h3>
+            <p class="empty-message">
+                You haven't shown interest in any plots. Browse available plots and express your interest!
+            </p>
+            <a href="{% url 'plot_list' %}" class="btn-browse">
+                <i class="fas fa-search"></i> Browse Plots
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .interested-plots-container {
+        padding: 20px;
+    }
+
+    .interested-header {
+        margin-bottom: 30px;
+    }
+
+    .interested-header h3 {
+        font-size: 24px;
+        color: #333;
+        margin-bottom: 5px;
+    }
+
+    .interested-header .text-muted {
+        color: #666;
+        font-size: 14px;
+    }
+
+    .interested-plots-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 25px;
+    }
+
+    .interested-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        transition: transform 0.3s, box-shadow 0.3s;
+        border: 1px solid #eee;
+    }
+
+    .interested-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+
+    .card-image {
+        position: relative;
+        height: 200px;
+        overflow: hidden;
+    }
+
+    .card-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s;
+    }
+
+    .interested-card:hover .card-image img {
+        transform: scale(1.05);
+    }
+
+    .status-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-badge.available {
+        background: #28a745;
+        color: white;
+    }
+
+    .status-badge.reserved {
+        background: #ffc107;
+        color: #333;
+    }
+
+    .status-badge.sold {
+        background: #dc3545;
+        color: white;
+    }
+
+    .card-content {
+        padding: 20px;
+    }
+
+    .plot-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 10px;
+        line-height: 1.4;
+    }
+
+    .plot-location {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 15px;
+    }
+
+    .plot-location i {
+        color: #007bff;
+    }
+
+    .plot-details-grid {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 15px;
+    }
+
+    .detail-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        flex-wrap: wrap;
+    }
+
+    .detail-item i {
+        width: 20px;
+        color: #007bff;
+    }
+
+    .detail-label {
+        color: #666;
+        min-width: 50px;
+    }
+
+    .detail-value {
+        color: #333;
+        font-weight: 500;
+    }
+
+    .amenities {
+        align-items: flex-start;
+    }
+
+    .amenities-list {
+        display: flex;
+        gap: 10px;
+    }
+
+    .amenity-tip {
+        font-size: 18px;
+        cursor: help;
+    }
+
+    .interest-message {
+        background: #f8f9fa;
+        border-left: 3px solid #007bff;
+        padding: 12px;
+        margin: 15px 0;
+        border-radius: 4px;
+        position: relative;
+    }
+
+    .interest-message i {
+        color: #007bff;
+        font-size: 14px;
+        opacity: 0.5;
+        position: absolute;
+        top: 5px;
+        left: 8px;
+    }
+
+    .message-text {
+        color: #555;
+        font-size: 13px;
+        line-height: 1.5;
+        margin: 0 0 5px 15px;
+        font-style: italic;
+    }
+
+    .message-date {
+        display: block;
+        font-size: 11px;
+        color: #999;
+        text-align: right;
+    }
+
+    .card-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .btn-view, .btn-remove {
+        flex: 1;
+        padding: 10px;
+        text-align: center;
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-view {
+        background: #007bff;
+        color: white;
+    }
+
+    .btn-view:hover {
+        background: #0056b3;
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-remove {
+        background: #fff;
+        color: #dc3545;
+        border: 1px solid #dc3545;
+    }
+
+    .btn-remove:hover {
+        background: #dc3545;
+        color: white;
+    }
+
+    /* Empty State Styles */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .empty-state-icon {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 25px;
+        background: #f8f9fa;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .empty-state-icon i {
+        font-size: 40px;
+        color: #007bff;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        font-size: 24px;
+        color: #333;
+        margin-bottom: 15px;
+    }
+
+    .empty-message {
+        color: #666;
+        font-size: 16px;
+        max-width: 400px;
+        margin: 0 auto 25px;
+        line-height: 1.6;
+    }
+
+    .btn-browse {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 30px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-decoration: none;
+        border-radius: 25px;
+        font-weight: 500;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .btn-browse:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Loading State */
+    .loading-spinner {
+        text-align: center;
+        padding: 40px;
+    }
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #007bff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 15px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .interested-plots-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .interested-header h3 {
+            font-size: 20px;
+        }
+
+        .card-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<script>
+    function removeInterest(interestId) {
+        if (confirm('Are you sure you want to remove your interest from this plot?')) {
+            document.getElementById(`remove-interest-form-${interestId}`).submit();
+        }
+    }
+
+    // Optional: Add loading state when removing interest
+    document.addEventListener('DOMContentLoaded', function() {
+        const removeButtons = document.querySelectorAll('.btn-remove');
+        
+        removeButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Removing...';
+                this.disabled = true;
+                
+                // The form submission will handle the actual removal
+                // The button text will reset if the page doesn't reload immediately
+            });
+        });
+    });
+</script>

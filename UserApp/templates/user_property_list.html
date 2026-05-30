@@ -1,0 +1,406 @@
+{% extends "user_nav.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>My Properties</h2>
+        <a href="{% url 'add_property' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add New Property
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        {% for property in properties %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                {% if property.images.first %}
+                    <img src="{{ property.images.first.image.url }}" 
+                         class="card-img-top" 
+                         alt="{{ property.title }}"
+                         style="height: 200px; object-fit: cover;">
+                {% else %}
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                         style="height: 200px;">
+                        <span class="text-muted">No Image</span>
+                    </div>
+                {% endif %}
+                
+                <div class="card-body">
+                    <h5 class="card-title">{{ property.title }}</h5>
+                    <p class="card-text text-muted">{{ property.address|truncatechars:50 }}</p>
+                    <p class="card-text">
+    <strong>Price: </strong>&#8377;{{ property.rent_amount }}
+</p>
+                  <!-- In the card-body section, add this button group -->
+<div class="d-flex flex-wrap gap-2">
+    <a href="{% url 'edit_property' property.id %}" 
+       class="btn btn-warning btn-sm">
+        <i class="fas fa-edit"></i> Edit
+    </a>
+    
+    <!-- Add More Images Button -->
+    <button type="button" 
+            class="btn btn-info btn-sm add-images-btn"
+            data-property-id="{{ property.id }}"
+            data-property-title="{{ property.title }}">
+        <i class="fas fa-images"></i> Add Images
+    </button>
+    
+    <!-- CHAT BUTTON with Message Count -->
+    <a href="{% url 'property_chat_list' property.id %}" 
+       class="btn btn-primary btn-sm position-relative"
+       title="Chat about this property">
+        <i class="fas fa-comment-dots"></i> Chat
+        {% with chat_count=property.chat_messages_count %}
+            {% if chat_count > 0 %}
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    {{ chat_count }}
+                    <span class="visually-hidden">unread messages</span>
+                </span>
+            {% endif %}
+        {% endwith %}
+    </a>
+    
+    <a href="{% url 'delete_property' property.id %}" 
+       class="btn btn-danger btn-sm"
+       onclick="return confirm('Are you sure you want to delete this property?')">
+        <i class="fas fa-trash"></i> Delete
+    </a>
+</div>
+                </div>
+                
+                <div class="card-footer text-muted">
+                    <small>
+                        Images: {{ property.images.count }} | 
+                        Created: {{ property.created_at|date:"M d, Y" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h5>No Properties Found</h5>
+                <p>You haven't added any properties yet. Click "Add New Property" to get started.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal for Adding Images -->
+<div class="modal fade" id="addImagesModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!-- Modal content will be loaded via AJAX -->
+        </div>
+    </div>
+</div>
+
+<!-- Add Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize modal
+    let addImagesModal;
+    try {
+        addImagesModal = new bootstrap.Modal(document.getElementById('addImagesModal'));
+    } catch (e) {
+        console.error('Bootstrap modal initialization error:', e);
+    }
+    
+    const modalContent = document.querySelector('#addImagesModal .modal-content');
+    
+    // File input preview function (keep this one)
+    function previewImages(input) {
+        const preview = document.getElementById('imagePreview');
+        if (!preview) return;
+        
+        preview.innerHTML = '';
+        const files = input.files;
+        
+        if (files.length > 0) {
+            preview.innerHTML = `<h6>Selected Files (${files.length}):</h6>`;
+            
+            for (let i = 0; i < files.length; i++) {
+                if (i >= 6) { // Limit preview to 6 files
+                    preview.innerHTML += `<div class="col-12 text-muted">... and ${files.length - 6} more</div>`;
+                    break;
+                }
+                
+                const file = files[i];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const col = document.createElement('div');
+                    col.className = 'col-4 col-md-3 mb-2';
+                    col.innerHTML = `
+                        <div class="border rounded p-1 text-center">
+                            <img src="${e.target.result}" class="img-fluid" style="height: 60px; object-fit: cover;">
+                            <small class="d-block text-truncate" style="font-size: 0.7rem">${file.name}</small>
+                        </div>
+                    `;
+                    preview.appendChild(col);
+                }
+                
+                reader.readAsDataURL(file);
+            }
+        }
+    }
+    
+    // Handle Add Images button click
+    document.querySelectorAll('.add-images-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const propertyId = this.getAttribute('data-property-id');
+            const propertyTitle = this.getAttribute('data-property-title');
+            
+            // Show loading state
+            modalContent.innerHTML = `
+                <div class="modal-body text-center p-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3">Loading upload form...</p>
+                </div>
+            `;
+            
+            if (addImagesModal) {
+                addImagesModal.show();
+            }
+            
+            // Load modal content via AJAX
+            fetch(`/property/add-images/${propertyId}/`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.html) {
+                    modalContent.innerHTML = data.html;
+                    
+                    // Initialize the upload functionality for this modal
+                    initializeImageUpload(propertyId);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading modal:', error);
+                modalContent.innerHTML = `
+                    <div class="modal-header">
+                        <h5 class="modal-title">Error</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-danger">
+                            Failed to load upload form. Please try again.
+                            <br><small>${error.message}</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                `;
+            });
+        });
+    });
+    
+    // Function to initialize image upload in the modal
+    function initializeImageUpload(propertyId) {
+        const fileInput = document.getElementById('imageInput');
+        const preview = document.getElementById('imagePreview');
+        const uploadBtn = document.getElementById('uploadImagesBtn');
+        const spinner = document.getElementById('uploadSpinner');
+        const form = document.getElementById('addImagesForm');
+        
+        if (!fileInput || !uploadBtn) {
+            console.error('Required elements not found');
+            return;
+        }
+        
+        // Remove any existing event listeners by cloning and replacing
+        const newFileInput = fileInput.cloneNode(true);
+        fileInput.parentNode.replaceChild(newFileInput, fileInput);
+        
+        const newUploadBtn = uploadBtn.cloneNode(true);
+        uploadBtn.parentNode.replaceChild(newUploadBtn, uploadBtn);
+        
+        // Get the new references
+        const updatedFileInput = document.getElementById('imageInput');
+        const updatedUploadBtn = document.getElementById('uploadImagesBtn');
+        const updatedPreview = document.getElementById('imagePreview');
+        const updatedSpinner = document.getElementById('uploadSpinner');
+        
+        // Preview images on selection
+        updatedFileInput.addEventListener('change', function() {
+            if (updatedPreview) {
+                updatedPreview.innerHTML = '';
+                const files = this.files;
+                
+                if (files.length > 0) {
+                    const previewHeader = document.createElement('div');
+                    previewHeader.className = 'col-12';
+                    previewHeader.innerHTML = `<h6>Selected Files (${files.length}):</h6>`;
+                    updatedPreview.appendChild(previewHeader);
+                    
+                    for (let i = 0; i < Math.min(files.length, 6); i++) {
+                        const file = files[i];
+                        const reader = new FileReader();
+                        
+                        reader.onload = function(e) {
+                            const col = document.createElement('div');
+                            col.className = 'col-4 col-md-3 mb-2';
+                            col.innerHTML = `
+                                <div class="border rounded p-1 text-center">
+                                    <img src="${e.target.result}" class="img-fluid" style="height: 60px; object-fit: cover;">
+                                    <small class="d-block text-truncate" style="font-size: 0.7rem">${file.name}</small>
+                                </div>
+                            `;
+                            updatedPreview.appendChild(col);
+                        }
+                        
+                        reader.readAsDataURL(file);
+                    }
+                    
+                    if (files.length > 6) {
+                        const moreDiv = document.createElement('div');
+                        moreDiv.className = 'col-12';
+                        moreDiv.innerHTML = `<small class="text-muted">... and ${files.length - 6} more</small>`;
+                        updatedPreview.appendChild(moreDiv);
+                    }
+                }
+            }
+        });
+        
+        // Handle upload button click
+        updatedUploadBtn.addEventListener('click', function() {
+            const files = updatedFileInput.files;
+            
+            if (!files || files.length === 0) {
+                alert('Please select at least one image to upload.');
+                return;
+            }
+            
+            // Check file sizes
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            for (let i = 0; i < files.length; i++) {
+                if (files[i].size > maxSize) {
+                    alert(`File "${files[i].name}" exceeds 5MB limit.`);
+                    return;
+                }
+            }
+            
+            // Show spinner
+            if (updatedSpinner) {
+                updatedSpinner.style.display = 'block';
+            }
+            updatedUploadBtn.disabled = true;
+            
+            // Create FormData
+            const formData = new FormData();
+            for (let i = 0; i < files.length; i++) {
+                formData.append('images', files[i]);
+            }
+            
+            // Get CSRF token
+            const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (csrfInput) {
+                formData.append('csrfmiddlewaretoken', csrfInput.value);
+            }
+            
+            // Upload images
+            fetch(`/property/add-images/${propertyId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    if (updatedPreview) {
+                        updatedPreview.innerHTML = `
+                            <div class="col-12">
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle"></i> ${data.message}
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    // Reload page after 2 seconds
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    alert(data.error || 'Error uploading images');
+                    if (updatedSpinner) {
+                        updatedSpinner.style.display = 'none';
+                    }
+                    updatedUploadBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error uploading images. Please try again. ' + error.message);
+                if (updatedSpinner) {
+                    updatedSpinner.style.display = 'none';
+                }
+                updatedUploadBtn.disabled = false;
+            });
+        });
+    }
+    
+    // Clean up modal when hidden
+    const modalElement = document.getElementById('addImagesModal');
+    if (modalElement) {
+        modalElement.addEventListener('hidden.bs.modal', function() {
+            modalContent.innerHTML = '';
+        });
+    }
+});
+</script>
+<style>
+/* Add some custom styles */
+.add-images-btn {
+    background-color: #0dcaf0;
+    border-color: #0dcaf0;
+}
+
+.add-images-btn:hover {
+    background-color: #0baccc;
+    border-color: #0baccc;
+}
+
+.modal-header {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.modal-footer {
+    border-top: 1px solid #dee2e6;
+}
+</style>
+{% endblock %}
